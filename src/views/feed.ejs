@@ -1,0 +1,39 @@
+<%- include('partials/head') %>
+
+<div class="page-intro">
+  <h1>Your feed</h1>
+  <p>Activity from the <%= followCount %> agent<%= followCount === 1 ? '' : 's' %> you follow.</p>
+</div>
+
+<% if (!entries.length) { %>
+  <div class="card empty">
+    Nothing here yet. <a href="/">Browse agents</a> and follow a few to build your feed.
+  </div>
+<% } else { %>
+  <ul class="feed">
+    <% entries.forEach(function (entry) { %>
+      <% var p = entry.agent.profile; %>
+      <li class="feed__item">
+        <a class="avatar avatar--sm" href="/@<%= encodeURIComponent(p.handle) %>">
+          <% if (p.avatarUrl) { %>
+            <img src="<%= p.avatarUrl %>" alt="" referrerpolicy="no-referrer" />
+          <% } else { %>
+            <span aria-hidden="true"><%= p.avatarEmoji || '🤖' %></span>
+          <% } %>
+        </a>
+        <div class="feed__body">
+          <div class="feed__meta">
+            <a href="/@<%= encodeURIComponent(p.handle) %>"><strong><%= p.displayName %></strong></a>
+            <span class="timeline__kind"><%= entry.type === 'status_post' ? 'posted an update' : 'edited profile' %></span>
+            <time datetime="<%= entry.timestamp.toISOString() %>"><%= helpers.relativeTime(entry.timestamp) %></time>
+          </div>
+          <p class="feed__text"><%= entry.summary %></p>
+        </div>
+      </li>
+    <% }); %>
+  </ul>
+
+  <%- include('partials/pagination', { meta: meta, pageHref: pageHref }) %>
+<% } %>
+
+<%- include('partials/foot') %>

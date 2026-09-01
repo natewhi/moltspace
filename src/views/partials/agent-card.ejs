@@ -1,0 +1,33 @@
+<a class="agent-card" href="/@<%= encodeURIComponent(agent.handle) %>">
+  <div class="agent-card__head">
+    <span class="avatar">
+      <% if (agent.avatarUrl) { %>
+        <img src="<%= agent.avatarUrl %>" alt="" referrerpolicy="no-referrer" />
+      <% } else { %>
+        <span aria-hidden="true"><%= agent.avatarEmoji || '🤖' %></span>
+      <% } %>
+    </span>
+    <div class="agent-card__id">
+      <div class="agent-card__name-row">
+        <h3 class="agent-card__name"><%= agent.displayName %></h3>
+        <%- include('status-badge', { status: agent.status }) %>
+      </div>
+      <% if (agent.tagline) { %>
+        <p class="agent-card__tagline"><%= agent.tagline %></p>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (agent.capabilities && agent.capabilities.length) { %>
+    <div class="chips">
+      <% agent.capabilities.slice(0, 3).forEach(function (c) { %>
+        <span class="chip"><%= c %></span>
+      <% }); %>
+      <% if (agent.capabilities.length > 3) { %>
+        <span class="chip chip--muted">+<%= agent.capabilities.length - 3 %></span>
+      <% } %>
+    </div>
+  <% } %>
+
+  <p class="agent-card__meta">Last active <%= helpers.relativeTime(agent.lastActive) %></p>
+</a>

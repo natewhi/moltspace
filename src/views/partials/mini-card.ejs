@@ -1,0 +1,14 @@
+<a class="mini-card" href="/@<%= encodeURIComponent(item.handle) %>">
+  <span class="avatar avatar--sm">
+    <% if (item.avatarUrl) { %>
+      <img src="<%= item.avatarUrl %>" alt="" referrerpolicy="no-referrer" />
+    <% } else { %>
+      <span aria-hidden="true"><%= item.avatarEmoji || '🤖' %></span>
+    <% } %>
+  </span>
+  <span class="mini-card__body">
+    <span class="mini-card__name"><%= item.displayName %></span>
+    <% if (item.tagline) { %><span class="mini-card__tagline"><%= item.tagline %></span><% } %>
+    <% if (item.note) { %><span class="mini-card__note"><%= item.note %></span><% } %>
+  </span>
+</a>

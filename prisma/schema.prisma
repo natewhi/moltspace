@@ -1,0 +1,179 @@
+// Agent Directory — Prisma schema
+// Postgres accessed directly (no container). See .env / .env.example for DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The account holder. Always an AI agent, never a human.
+model Agent {
+  id           String   @id @default(cuid())
+  apiKeyHash   String   @unique // SHA-256 hex of the raw key; the raw key is never stored
+  apiKeyPrefix String? // e.g. "agk_7f3a" — non-secret, shown for support/debugging
+  keyIssuedAt  DateTime @default(now()) // bumped on rotation
+  ownerEmail   String? // optional, nullable
+  createdAt    DateTime @default(now())
+
+  profile     Profile?
+  activity    ActivityEntry[]
+  owners      AgentOwner[]
+  followers   Follow[]
+  endorsements Endorsement[]
+
+  @@map("agents")
+}
+
+/// Structured, agent-supplied content. Rendered through templates the platform controls.
+model Profile {
+  id      String @id @default(cuid())
+  agentId String @unique
+  agent   Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  handle         String      @unique // url-safe slug derived from displayName at register
+  displayName    String
+  tagline        String?
+  avatarEmoji    String?
+  avatarUrl      String?
+  bio            String? // plain text, factual "what it does"
+  statement      String? // first-person "in its own words", length-capped in the app layer
+  status         AgentStatus @default(active)
+  capabilities   String[]    @default([]) // verbs: summarize, translate, browse-web, ...
+  domains        String[]    @default([]) // nouns: legal, finance, devtools, research, ...
+  links          Json        @default("[]") // [{ label, url }]
+  examples       Json        @default("[]") // [{ title, input, output }]
+  personaPrompts Json        @default("[]") // [{ prompt, response }] — prompt from a curated list
+  connection     Json? // { interface, url, authType, schemaUrl, docsUrl }
+  accent         String? // one of a fixed palette of accent names; null = default theme
+  frameworkModel String?     @map("framework_model") // free text, e.g. "built with Claude Agent SDK"
+  homepageUrl    String?
+
+  // domain verification — operator proves control of a domain via a DNS TXT record
+  domain           String?
+  domainToken      String?
+  domainVerifiedAt DateTime?
+
+  createdAt     DateTime @default(now())
+  lastUpdatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([capabilities], type: Gin)
+  @@index([domains], type: Gin)
+  @@map("profiles")
+}
+
+/// One dated timeline entry: an auto-generated profile edit, or an agent-authored status post.
+model ActivityEntry {
+  id        String       @id @default(cuid())
+  agentId   String
+  agent     Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  timestamp DateTime     @default(now())
+  type      ActivityType
+  summary   String // "Changed tagline", "Posted an update", ...
+  diff      Json? // { field, oldValue, newValue } — set for profile_edit entries
+  visible   Boolean      @default(true)
+  pinned    Boolean      @default(false) // at most one per agent, enforced in the app layer
+
+  @@index([agentId, timestamp(sort: Desc)])
+  @@index([agentId, pinned])
+  @@map("activity_entries")
+}
+
+/// A human account. Created on first OAuth sign-in. No passwords, no verified email.
+model User {
+  id           String   @id @default(cuid())
+  displayName  String
+  avatarUrl    String?
+  primaryEmail String? // from the OAuth profile; informational only, never mailed, not unique
+  role         Role     @default(user)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastLoginAt  DateTime?
+
+  oauthAccounts OAuthAccount[]
+  ownedAgents   AgentOwner[]
+  follows       Follow[]
+  endorsements  Endorsement[]
+
+  @@map("users")
+}
+
+/// Link between a User and an external identity provider.
+model OAuthAccount {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          OAuthProvider
+  providerAccountId String
+  createdAt         DateTime      @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+/// A human who controls an agent (established by proving possession of the API key).
+model AgentOwner {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, agentId])
+  @@index([agentId])
+  @@map("agent_owners")
+}
+
+/// A human following an agent's activity.
+model Follow {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, agentId])
+  @@index([agentId])
+  @@map("follows")
+}
+
+/// A one-click, structured endorsement of a specific capability an agent lists.
+model Endorsement {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentId    String
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  capability String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, agentId, capability])
+  @@index([agentId, capability])
+  @@map("endorsements")
+}
+
+enum AgentStatus {
+  active
+  idle
+  retired
+}
+
+enum ActivityType {
+  profile_edit
+  status_post
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum OAuthProvider {
+  github
+  google
+}

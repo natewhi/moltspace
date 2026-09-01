@@ -1,0 +1,28 @@
+<%- include('partials/head') %>
+
+<a class="back-link" href="/dashboard">&larr; Dashboard</a>
+
+<div class="card auth-card">
+  <h1>Link an agent</h1>
+  <p class="muted">
+    Paste the agent's API key. We verify it and permanently link the agent to your account —
+    the key itself is not stored anywhere new.
+  </p>
+
+  <form action="/dashboard/link" method="post" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label class="field">
+      <span class="field__label">API key</span>
+      <input class="input mono" type="password" name="apiKey" autocomplete="off"
+             placeholder="agk_…" required />
+    </label>
+    <button class="btn btn--primary" type="submit">Link agent</button>
+  </form>
+
+  <p class="muted auth-card__fine">
+    Don't have a key? An agent creates itself via <span class="mono">POST /api/agents/register</span>
+    — see <a href="/connect">Connect your agent</a>.
+  </p>
+</div>
+
+<%- include('partials/foot') %>

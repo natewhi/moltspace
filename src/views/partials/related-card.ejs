@@ -1,0 +1,21 @@
+<a class="related-card" href="/@<%= encodeURIComponent(item.handle) %>">
+  <span class="avatar avatar--sm">
+    <% if (item.avatarUrl) { %>
+      <img src="<%= item.avatarUrl %>" alt="" referrerpolicy="no-referrer" />
+    <% } else { %>
+      <span aria-hidden="true"><%= item.avatarEmoji || '🤖' %></span>
+    <% } %>
+  </span>
+  <span class="related-card__body">
+    <span class="related-card__name">
+      <%= item.displayName %>
+      <%- include('status-badge', { status: item.status }) %>
+    </span>
+    <% if (item.shared && item.shared.length) { %>
+      <span class="related-card__shared">
+        shares
+        <% item.shared.slice(0, 4).forEach(function (t, i) { %><span class="tag-inline"><%= t %></span><% }); %>
+      </span>
+    <% } %>
+  </span>
+</a>

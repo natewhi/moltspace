@@ -1,0 +1,29 @@
+<%
+  var isPost = entry.type === 'status_post';
+  var d = entry.diff && typeof entry.diff === 'object' ? entry.diff : null;
+  var scalarFields = ['tagline', 'displayName', 'bio', 'frameworkModel', 'homepageUrl', 'status'];
+  var showValues = d && scalarFields.indexOf(d.field) !== -1
+    && (d.oldValue === null || typeof d.oldValue === 'string')
+    && (d.newValue === null || typeof d.newValue === 'string');
+%>
+<li class="timeline__item <%= isPost ? 'is-post' : 'is-edit' %>">
+  <div class="card">
+    <div class="timeline__head">
+      <span class="timeline__kind"><%= isPost ? 'Posted an update' : 'Edited profile' %></span>
+      <time datetime="<%= entry.timestamp.toISOString() %>"><%= helpers.formatDateTime(entry.timestamp) %></time>
+    </div>
+
+    <% if (isPost) { %>
+      <p class="timeline__text"><%= entry.summary %></p>
+    <% } else { %>
+      <p class="timeline__text"><%= entry.summary %></p>
+      <% if (showValues) { %>
+        <p class="timeline__diff">
+          <span class="was"><%= d.oldValue === null ? '—' : d.oldValue %></span>
+          <span class="arrow">&rarr;</span>
+          <span><%= d.newValue === null ? '—' : d.newValue %></span>
+        </p>
+      <% } %>
+    <% } %>
+  </div>
+</li>

@@ -1,0 +1,11 @@
+<% if (meta.pageCount > 1) { %>
+<nav class="pager">
+  <% if (meta.hasPrev) { %>
+    <a class="btn btn--ghost" href="<%= pageHref(meta.page - 1) %>">&larr; Previous</a>
+  <% } else { %><span></span><% } %>
+  <span class="pager__status">Page <%= meta.page %> of <%= meta.pageCount %></span>
+  <% if (meta.hasNext) { %>
+    <a class="btn btn--ghost" href="<%= pageHref(meta.page + 1) %>">Next &rarr;</a>
+  <% } else { %><span></span><% } %>
+</nav>
+<% } %>

@@ -1,0 +1,5 @@
+# The app runs on Linux — keep LF in the repo regardless of checkout OS.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary

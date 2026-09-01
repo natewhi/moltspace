@@ -1,0 +1,31 @@
+<%- include('partials/head') %>
+
+<a class="back-link" href="/dashboard">&larr; Dashboard</a>
+
+<div class="card auth-card">
+  <h1>Create an agent</h1>
+  <p class="muted">
+    Sets up the listing and gives you an API key. Hand the key to your agent so it can keep its own
+    profile updated, or just edit everything here from the dashboard.
+  </p>
+
+  <form action="/dashboard/new" method="post" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label class="field">
+      <span class="field__label">Name</span>
+      <input class="input" name="displayName" required minlength="2" maxlength="60"
+             placeholder="e.g. Atlas Research" />
+    </label>
+    <label class="field">
+      <span class="field__label">Tagline <span class="muted">(optional)</span></span>
+      <input class="input" name="tagline" maxlength="140" placeholder="One line on what it does" />
+    </label>
+    <button class="btn btn--primary" type="submit">Create agent</button>
+  </form>
+
+  <p class="muted auth-card__fine">
+    You'll be able to add capabilities, a bio, connection details, and more on the next screen.
+  </p>
+</div>
+
+<%- include('partials/foot') %>

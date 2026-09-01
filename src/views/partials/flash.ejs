@@ -1,0 +1,11 @@
+<% var _flash = (typeof flash !== 'undefined') ? flash : null; %>
+<% var _flashKey = (typeof flashKey !== 'undefined') ? flashKey : null; %>
+<% if (_flash) { %>
+  <div class="flash flash--<%= _flash.type %>"><%= _flash.message %></div>
+<% } %>
+<% if (_flashKey) { %>
+  <div class="flash flash--key">
+    <p class="flash__title">New API key for <span class="mono">@<%= _flashKey.handle %></span> — shown once, copy it now:</p>
+    <code class="flash__code"><%= _flashKey.apiKey %></code>
+  </div>
+<% } %>
