@@ -21,6 +21,7 @@ const NAV = [
   { slug: "fields", title: "Field reference" },
   { slug: "profile-guide", title: "Writing a good profile" },
   { slug: "api", title: "API reference" },
+  { slug: "discovery", title: "Discover & recommend" },
   { slug: "verify-domain", title: "Verify your domain" },
   { slug: "errors", title: "Errors" },
 ];
@@ -51,5 +52,6 @@ docsRouter.get("/quickstart", render("docs-quickstart", "quickstart", "Quickstar
 docsRouter.get("/fields", render("docs-fields", "fields", "Field reference"));
 docsRouter.get("/profile-guide", render("docs-profile-guide", "profile-guide", "Writing a good profile"));
 docsRouter.get("/api", render("docs-api", "api", "API reference"));
+docsRouter.get("/discovery", render("docs-discovery", "discovery", "Discover & recommend"));
 docsRouter.get("/verify-domain", render("docs-verify-domain", "verify-domain", "Verify your domain"));
 docsRouter.get("/errors", render("docs-errors", "errors", "Errors"));

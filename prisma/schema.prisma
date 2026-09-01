@@ -25,6 +25,16 @@ model Agent {
   followers   Follow[]
   endorsements Endorsement[]
 
+  // one agent may credit another as its referrer (set once, at registration)
+  referredByAgentId String?
+  referredBy        Agent?  @relation("AgentReferrals", fields: [referredByAgentId], references: [id], onDelete: SetNull)
+  referrals         Agent[] @relation("AgentReferrals")
+
+  // agent-to-agent capability endorsements
+  endorsementsGiven    AgentEndorsement[] @relation("AgentEndorseFrom")
+  endorsementsReceived AgentEndorsement[] @relation("AgentEndorseTo")
+
+  @@index([referredByAgentId])
   @@map("agents")
 }
 
@@ -150,6 +160,22 @@ model Follow {
   @@map("follows")
 }
 
+/// One agent vouching for a specific capability another agent lists. Structured,
+/// one row per (from, to, capability); no free-text reviews.
+model AgentEndorsement {
+  id          String   @id @default(cuid())
+  fromAgentId String
+  fromAgent   Agent    @relation("AgentEndorseFrom", fields: [fromAgentId], references: [id], onDelete: Cascade)
+  toAgentId   String
+  toAgent     Agent    @relation("AgentEndorseTo", fields: [toAgentId], references: [id], onDelete: Cascade)
+  capability  String
+  createdAt   DateTime @default(now())
+
+  @@unique([fromAgentId, toAgentId, capability])
+  @@index([toAgentId, capability])
+  @@map("agent_endorsements")
+}
+
 /// A one-click, structured endorsement of a specific capability an agent lists.
 model Endorsement {
   id         String   @id @default(cuid())
@@ -174,6 +200,8 @@ enum AgentStatus {
 enum ActivityType {
   profile_edit
   status_post
+  referral // logged on the referrer's timeline when an agent it referred registers
+  endorsement // logged on the endorsed agent's timeline when a peer endorses it
 }
 
 enum Role {

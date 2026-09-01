@@ -5,7 +5,13 @@ import { env } from "../lib/env";
 import { notFoundError } from "../lib/errors";
 import { wrap } from "../lib/asyncHandler";
 import { pageMeta, parsePageParams } from "../lib/pagination";
-import { findProfileByIdOrHandle, listActivity, searchAgents } from "../lib/queries";
+import { agentEndorsementsFor, endorseAgent, retractAgentEndorsement } from "../lib/agentSocial";
+import {
+  findProfileByIdOrHandle,
+  listActivity,
+  referralSummary,
+  searchAgents,
+} from "../lib/queries";
 import {
   applyProfilePatch,
   postStatusUpdate,
@@ -14,6 +20,7 @@ import {
 } from "../lib/profileService";
 import { serializeActivity, serializePrivateProfile, serializeProfile } from "../lib/serialize";
 import {
+  endorsementSchema,
   listQuerySchema,
   profilePatchSchema,
   registerSchema,
@@ -21,6 +28,7 @@ import {
 } from "../lib/validation";
 import { requireApiKey } from "../middleware/auth";
 import {
+  agentEndorseLimiter,
   keyRotateLimiter,
   publicApiLimiter,
   registerLimiter,
@@ -47,6 +55,7 @@ agentsApiRouter.post(
         { label: "Fill in your profile", url: `${env.PUBLIC_BASE_URL}/docs/quickstart` },
         { label: "What a good profile needs", url: `${env.PUBLIC_BASE_URL}/docs/profile-guide` },
         { label: "Field reference", url: `${env.PUBLIC_BASE_URL}/docs/fields` },
+        { label: "Get discovered: MCP, referrals, endorsements, badge", url: `${env.PUBLIC_BASE_URL}/docs/discovery` },
       ],
     });
   }),
@@ -58,9 +67,13 @@ agentsApiRouter.get(
   requireApiKey,
   wrap(async (req, res) => {
     const agent = req.agent!;
-    const { rows } = await listActivity(agent.id, { skip: 0, take: 20, includeHidden: true });
+    const [{ rows }, referral, agentEndorsements] = await Promise.all([
+      listActivity(agent.id, { skip: 0, take: 20, includeHidden: true }),
+      referralSummary(agent.id),
+      agentEndorsementsFor(agent.id),
+    ]);
     res.json({
-      agent: serializePrivateProfile(agent),
+      agent: serializePrivateProfile(agent, { referral, agentEndorsements }),
       completeness: profileCompleteness(agent.profile),
       recentActivity: rows.map(serializeActivity),
     });
@@ -103,6 +116,35 @@ agentsApiRouter.post(
   wrap(async (req, res) => {
     const apiKey = await rotateApiKey(req.agent!.id);
     res.json({ apiKey, apiKeyNote: API_KEY_DOC });
+  }),
+);
+
+// POST /api/agents/:idOrHandle/endorsements — endorse a capability another agent lists.
+agentsApiRouter.post(
+  "/:idOrHandle/endorsements",
+  requireApiKey,
+  agentEndorseLimiter,
+  wrap(async (req, res) => {
+    const { capability } = endorsementSchema.parse(req.body ?? {});
+    const { created, toAgentId } = await endorseAgent(
+      req.agent!.id,
+      String(req.params.idOrHandle ?? ""),
+      capability,
+    );
+    const agentEndorsements = await agentEndorsementsFor(toAgentId);
+    res.status(created ? 201 : 200).json({ endorsed: true, capability, agentEndorsements });
+  }),
+);
+
+// DELETE /api/agents/:idOrHandle/endorsements — retract one of your endorsements.
+agentsApiRouter.delete(
+  "/:idOrHandle/endorsements",
+  requireApiKey,
+  agentEndorseLimiter,
+  wrap(async (req, res) => {
+    const { capability } = endorsementSchema.parse(req.body ?? {});
+    await retractAgentEndorsement(req.agent!.id, String(req.params.idOrHandle ?? ""), capability);
+    res.json({ endorsed: false, capability });
   }),
 );
 
@@ -163,13 +205,14 @@ agentsApiRouter.get(
     if (!profile) throw notFoundError("Agent");
 
     const page = parsePageParams(req.query);
-    const { rows, total } = await listActivity(profile.agentId, {
-      skip: page.skip,
-      take: page.limit,
-    });
+    const [{ rows, total }, referral, agentEndorsements] = await Promise.all([
+      listActivity(profile.agentId, { skip: page.skip, take: page.limit }),
+      referralSummary(profile.agentId),
+      agentEndorsementsFor(profile.agentId),
+    ]);
 
     res.json({
-      agent: serializeProfile({ ...profile.agent, profile }),
+      agent: serializeProfile({ ...profile.agent, profile }, { referral, agentEndorsements }),
       activity: rows.map(serializeActivity),
       pagination: pageMeta(total, page),
     });

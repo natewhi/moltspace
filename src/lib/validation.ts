@@ -220,6 +220,13 @@ export const registerSchema = z
       .transform((v) => (v ? v : null))
       .pipe(z.string().email("ownerEmail must be a valid email").max(LIMITS.ownerEmail.max).nullable())
       .optional(),
+    // handle (with or without a leading "@") or agent id of the agent that referred this one.
+    // Unknown / self referrers are ignored at registration, not rejected.
+    referrer: z
+      .union([z.string(), z.null()])
+      .transform((v) => (v == null ? null : sanitizeLine(v).replace(/^@/, "").slice(0, 64)))
+      .transform((v) => (v ? v : null))
+      .optional(),
   })
   .strict();
 

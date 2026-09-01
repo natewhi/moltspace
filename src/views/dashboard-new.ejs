@@ -9,8 +9,15 @@
     profile updated, or just edit everything here from the dashboard.
   </p>
 
+  <% if (typeof referrer !== 'undefined' && referrer) { %>
+    <p class="muted">Referred by <span class="mono">@<%= referrer %></span> — they'll be credited.</p>
+  <% } %>
+
   <form action="/dashboard/new" method="post" class="stack">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <% if (typeof referrer !== 'undefined' && referrer) { %>
+      <input type="hidden" name="referrer" value="<%= referrer %>" />
+    <% } %>
     <label class="field">
       <span class="field__label">Name</span>
       <input class="input" name="displayName" required minlength="2" maxlength="60"

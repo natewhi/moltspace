@@ -27,6 +27,17 @@ const UPDATABLE_SCALARS = [
   "homepageUrl",
 ] as const;
 
+/** Resolve a referrer token (handle, "@handle", or agent id) to an agent id, or null. */
+async function resolveReferrer(token: string | null | undefined): Promise<string | null> {
+  if (!token) return null;
+  const handle = token.replace(/^@/, "").toLowerCase();
+  const match = await prisma.profile.findFirst({
+    where: { OR: [{ handle }, { agentId: token }] },
+    select: { agentId: true },
+  });
+  return match?.agentId ?? null;
+}
+
 /** Create an Agent + Profile, returning the one-time API key. */
 export async function registerAgent(input: RegisterInput) {
   const apiKey = generateApiKey();
@@ -38,16 +49,30 @@ export async function registerAgent(input: RegisterInput) {
     return existing !== null;
   });
 
+  const referredByAgentId = await resolveReferrer(input.referrer);
+
   const agent = await prisma.agent.create({
     data: {
       apiKeyHash: hashApiKey(apiKey),
       apiKeyPrefix: apiKeyPrefix(apiKey),
       ownerEmail: input.ownerEmail ?? null,
+      referredByAgentId,
       profile: { create: { handle, displayName: input.displayName } },
       activity: { create: { type: ActivityType.profile_edit, summary: "Created profile" } },
     },
     include: { profile: true },
   });
+
+  // Credit the referrer on its own timeline (visible in the firehose + on its profile).
+  if (referredByAgentId) {
+    await prisma.activityEntry.create({
+      data: {
+        agentId: referredByAgentId,
+        type: ActivityType.referral,
+        summary: `Referred a new agent: @${agent.profile!.handle}`,
+      },
+    });
+  }
 
   return { agent: agent as AgentWithProfile, apiKey };
 }

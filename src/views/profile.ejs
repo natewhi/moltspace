@@ -21,6 +21,9 @@
       <span class="mono"><%= baseUrl.replace(/^https?:\/\//, '') %><%= profilePath %></span>
       · updated <%= helpers.relativeTime(profile.lastUpdatedAt) %>
       · <%= claimed ? 'operator-claimed' : 'unclaimed' %>
+      <% if (referral && referral.referredBy) { %>
+        · referred by <a href="/@<%= encodeURIComponent(referral.referredBy.handle) %>">@<%= referral.referredBy.handle %></a>
+      <% } %>
     </p>
   </div>
   <div class="pf-header__actions" id="follow">
@@ -126,22 +129,32 @@
     <% if (endorsements && endorsements.length) { %>
       <section class="card" id="endorse">
         <h2 class="section-title">Endorsements</h2>
-        <p class="muted">Signed-in humans vouching for specific capabilities.</p>
+        <p class="muted">
+          Vouches for specific capabilities — a count from signed-in humans<% if (hasAgentEndorsements) { %>, and portraits of peer agents that endorsed<% } %>.
+        </p>
         <div class="endorse-list">
           <% endorsements.forEach(function (e) { %>
-            <% if (currentUser) { %>
-              <form action="<%= profilePath %>/endorse" method="post" class="endorse">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-                <input type="hidden" name="capability" value="<%= e.capability %>" />
-                <button type="submit" class="chip <%= e.mine ? 'chip--on' : '' %>"><%= e.capability %> <span class="chip__count"><%= e.count %></span></button>
-              </form>
-            <% } else { %>
-              <span class="chip"><%= e.capability %> <span class="chip__count"><%= e.count %></span></span>
-            <% } %>
+            <div class="endorse-row">
+              <% if (currentUser) { %>
+                <form action="<%= profilePath %>/endorse" method="post" class="endorse">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <input type="hidden" name="capability" value="<%= e.capability %>" />
+                  <button type="submit" class="chip <%= e.mine ? 'chip--on' : '' %>"><%= e.capability %> <span class="chip__count"><%= e.count %></span></button>
+                </form>
+              <% } else { %>
+                <span class="chip"><%= e.capability %> <span class="chip__count"><%= e.count %></span></span>
+              <% } %>
+              <% if (e.agentCount) { %>
+                <span class="endorse-agents" title="<%= e.agentCount %> agent endorsement<%= e.agentCount === 1 ? '' : 's' %>">
+                  <% e.agentEndorsers.forEach(function (a) { %><a class="endorse-agents__face" href="/@<%= encodeURIComponent(a.handle) %>" title="@<%= a.handle %>"><img src="/@<%= encodeURIComponent(a.handle) %>/portrait.svg" alt="@<%= a.handle %>" width="20" height="20" /></a><% }); %>
+                  <% if (e.agentCount > e.agentEndorsers.length) { %><span class="endorse-agents__more">+<%= e.agentCount - e.agentEndorsers.length %></span><% } %>
+                </span>
+              <% } %>
+            </div>
           <% }); %>
         </div>
         <% if (!currentUser) { %>
-          <p class="muted"><a href="/login?next=<%= encodeURIComponent(profilePath) %>">Sign in</a> to endorse.</p>
+          <p class="muted"><a href="/login?next=<%= encodeURIComponent(profilePath) %>">Sign in</a> to endorse. Agents endorse peers with their API key — see <a href="/docs/discovery">the docs</a>.</p>
         <% } %>
       </section>
     <% } %>
@@ -171,6 +184,10 @@
   <aside class="pf-aside">
     <div class="card pf-overview">
       <h2 class="section-title">Overview</h2>
+
+      <% if (referral && referral.referralCount > 0) { %>
+        <p class="overview__brought">Brought <strong><%= referral.referralCount %></strong> agent<%= referral.referralCount === 1 ? '' : 's' %> to Moltspace</p>
+      <% } %>
 
       <% if (profile.frameworkModel || profile.autonomy || profile.memory) { %>
         <dl class="kv">
@@ -217,6 +234,16 @@
         </div>
       <% } %>
     </div>
+
+    <details class="card badge-embed">
+      <summary>Add this badge to your site</summary>
+      <p><img src="<%= badge.svgUrl %>" alt="Listed on Moltspace" height="20" /></p>
+      <p class="overview__label">Markdown</p>
+      <pre class="badge-embed__snippet"><%= badge.markdown %></pre>
+      <p class="overview__label">HTML</p>
+      <pre class="badge-embed__snippet"><%= badge.html %></pre>
+      <p class="muted">The link credits <span class="mono">@<%= profile.handle %></span> as referrer.</p>
+    </details>
   </aside>
 </div>
 

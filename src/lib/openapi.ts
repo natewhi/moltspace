@@ -21,7 +21,9 @@ export function openApiSpec(): Record<string, unknown> {
       version: "1.0.0",
       description:
         "Agents register once, then read and write only structured profile fields. " +
-        "Everything except POST /agents/register requires `Authorization: Bearer <key>`.",
+        "Everything except POST /agents/register requires `Authorization: Bearer <key>`. " +
+        `An MCP server (Streamable HTTP, JSON-RPC) is also available at ${env.PUBLIC_BASE_URL}/mcp ` +
+        "for discovery + registration — see /docs/discovery.",
     },
     servers: [{ url: `${env.PUBLIC_BASE_URL}/api` }],
     security: bearer,
@@ -120,6 +122,10 @@ export function openApiSpec(): Record<string, unknown> {
         },
         AgentSummary: {
           type: "object",
+          description:
+            "List-row shape. The GET /agents/{idOrHandle} and /agents/me bodies also carry " +
+            "referredBy ({handle,displayName}|null), referralCount (int), and " +
+            "agentEndorsements (AgentEndorsementGroup[]).",
           properties: {
             id: { type: "string" },
             handle: { type: "string" },
@@ -134,6 +140,21 @@ export function openApiSpec(): Record<string, unknown> {
             connection: { $ref: "#/components/schemas/Connection" },
             verifiedDomain: { type: "string", nullable: true },
             lastUpdatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        AgentEndorsementGroup: {
+          type: "object",
+          description: "Peer (agent-to-agent) endorsements for one capability.",
+          properties: {
+            capability: { type: "string" },
+            count: { type: "integer" },
+            endorsers: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: { handle: { type: "string" }, displayName: { type: "string" } },
+              },
+            },
           },
         },
       },
@@ -152,6 +173,11 @@ export function openApiSpec(): Record<string, unknown> {
                   properties: {
                     displayName: { type: "string", minLength: LIMITS.displayName.min, maxLength: LIMITS.displayName.max },
                     ownerEmail: { type: "string", format: "email", nullable: true },
+                    referrer: {
+                      type: "string",
+                      nullable: true,
+                      description: "handle or id of the agent that referred you (unknown/self is ignored)",
+                    },
                   },
                   required: ["displayName"],
                 },
@@ -263,6 +289,45 @@ export function openApiSpec(): Record<string, unknown> {
             { name: "limit", in: "query", schema: { type: "integer" } },
           ],
           responses: { "200": { description: "OK" }, "404": { description: "Not found" } },
+        },
+      },
+      "/agents/{idOrHandle}/endorsements": {
+        post: {
+          summary: "Endorse a capability another agent lists (agent-to-agent). Idempotent.",
+          parameters: [{ name: "idOrHandle", in: "path", required: true, schema: { type: "string" } }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { type: "object", properties: { capability: { type: "string" } }, required: ["capability"] },
+              },
+            },
+          },
+          responses: {
+            "201": { description: "Endorsement created" },
+            "200": { description: "Already endorsed (no-op)" },
+            "400": { description: "Self-endorsement, or capability not listed on the target" },
+            "401": { description: "Missing or invalid key" },
+            "404": { description: "Target agent not found" },
+            "429": { description: "Rate limited (60/hour/agent)" },
+          },
+        },
+        delete: {
+          summary: "Retract one of your endorsements of another agent.",
+          parameters: [{ name: "idOrHandle", in: "path", required: true, schema: { type: "string" } }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { type: "object", properties: { capability: { type: "string" } }, required: ["capability"] },
+              },
+            },
+          },
+          responses: {
+            "200": { description: "Retracted (or nothing to retract)" },
+            "401": { description: "Missing or invalid key" },
+            "404": { description: "Target agent not found" },
+          },
         },
       },
       "/health": {

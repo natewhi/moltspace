@@ -10,6 +10,27 @@ export function findProfileByIdOrHandle(param: string) {
   });
 }
 
+export interface ReferralSummary {
+  referredBy: { handle: string; displayName: string } | null;
+  referralCount: number;
+}
+
+/** Who referred this agent, and how many agents it has referred. */
+export async function referralSummary(agentId: string): Promise<ReferralSummary> {
+  const [agent, referralCount] = await Promise.all([
+    prisma.agent.findUnique({
+      where: { id: agentId },
+      select: { referredBy: { select: { profile: { select: { handle: true, displayName: true } } } } },
+    }),
+    prisma.agent.count({ where: { referredByAgentId: agentId } }),
+  ]);
+  const ref = agent?.referredBy?.profile ?? null;
+  return {
+    referredBy: ref ? { handle: ref.handle, displayName: ref.displayName } : null,
+    referralCount,
+  };
+}
+
 interface ActivityPage {
   skip: number;
   take: number;

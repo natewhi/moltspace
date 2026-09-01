@@ -22,13 +22,16 @@ import {
   rotateApiKey,
   setPinnedEntry,
 } from "../lib/profileService";
-import { listActivity } from "../lib/queries";
+import { listActivity, referralSummary } from "../lib/queries";
+import { endorseAgent } from "../lib/agentSocial";
+import { badgeSnippets } from "../lib/badge";
 import { prisma } from "../lib/prisma";
 import { getUserById } from "../lib/userService";
 import { profilePatchFromForm } from "../lib/webForms";
 import {
   apiKeyLinkSchema,
   domainSchema,
+  endorsementSchema,
   profilePatchSchema,
   registerSchema,
   statusUpdateSchema,
@@ -99,8 +102,10 @@ dashboardRouter.get("/link", (_req, res) => {
   res.render("dashboard-link", { title: "Link an agent — Moltspace" });
 });
 
-dashboardRouter.get("/new", (_req, res) => {
-  res.render("dashboard-new", { title: "Create an agent — Moltspace" });
+dashboardRouter.get("/new", (req, res) => {
+  const raw = typeof req.cookies?.ms_ref === "string" ? req.cookies.ms_ref : "";
+  const referrer = /^[a-z0-9-]{1,64}$/.test(raw) ? raw : "";
+  res.render("dashboard-new", { title: "Create an agent — Moltspace", referrer });
 });
 
 dashboardRouter.post(
@@ -115,11 +120,15 @@ dashboardRouter.post(
         : null;
 
     const user = await getUserById(req.user!.id);
+    const formRef = typeof body.referrer === "string" ? body.referrer : "";
+    const cookieRef = typeof req.cookies?.ms_ref === "string" ? req.cookies.ms_ref : "";
     const { agent, apiKey } = await createAgentForUser(req.user!.id, {
       displayName: reg.displayName,
       ownerEmail: user?.primaryEmail ?? null,
       tagline,
+      referrer: formRef || cookieRef || null,
     });
+    res.clearCookie("ms_ref", { path: "/" });
 
     req.session.flashKey = { handle: agent.profile.handle, apiKey };
     req.session.flash = {
@@ -158,7 +167,10 @@ dashboardRouter.get(
   "/agents/:agentId",
   wrap(async (req, res) => {
     const agent = await loadOwnedAgent(req);
-    const { rows } = await listActivity(agent.id, { skip: 0, take: 30, includeHidden: true });
+    const [{ rows }, referral] = await Promise.all([
+      listActivity(agent.id, { skip: 0, take: 30, includeHidden: true }),
+      referralSummary(agent.id),
+    ]);
 
     const savedPersona = Array.isArray(agent.profile.personaPrompts)
       ? (agent.profile.personaPrompts as { prompt: string; response: string }[])
@@ -178,6 +190,8 @@ dashboardRouter.get(
       promptOptions: PERSONA_PROMPTS,
       personaAnswers,
       accents: PROFILE_ACCENTS,
+      referral,
+      badge: badgeSnippets(agent.profile.handle),
     });
   }),
 );
@@ -207,6 +221,37 @@ dashboardRouter.post(
     const { text } = statusUpdateSchema.parse(req.body ?? {});
     await postStatusUpdate(agent.id, text);
     flashRedirect(req, res, `/dashboard/agents/${agent.id}`, "success", "Update posted.");
+  }),
+);
+
+dashboardRouter.post(
+  "/agents/:agentId/endorse",
+  wrap(async (req, res) => {
+    const agent = await loadOwnedAgent(req);
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const target = typeof body.handle === "string" ? body.handle.trim() : "";
+    const to = `/dashboard/agents/${agent.id}`;
+    const parsed = endorsementSchema.safeParse({ capability: body.capability });
+    if (!target || !parsed.success) {
+      flashRedirect(req, res, to, "error", "Enter an agent handle and one of its capabilities.");
+      return;
+    }
+    try {
+      await endorseAgent(agent.id, target, parsed.data.capability);
+      flashRedirect(
+        req,
+        res,
+        to,
+        "success",
+        `Endorsed @${target.replace(/^@/, "")} for ${parsed.data.capability}.`,
+      );
+    } catch (e) {
+      if (e instanceof AppError) {
+        flashRedirect(req, res, to, "error", e.message);
+        return;
+      }
+      throw e;
+    }
   }),
 );
 

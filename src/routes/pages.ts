@@ -16,9 +16,13 @@ import {
   interfaceFacets,
   lastActiveMap,
   listActivity,
+  referralSummary,
   searchAgents,
   sitemapProfiles,
 } from "../lib/queries";
+import { agentEndorsementsFor } from "../lib/agentSocial";
+import { agentBadgeSvg, badgeSnippets } from "../lib/badge";
+import { agentJsonLd, siteJsonLd } from "../lib/jsonld";
 import { hostMatchesDomain } from "../lib/domainVerify";
 import { agentPortrait } from "../lib/portrait";
 import { relatedAgents } from "../lib/related";
@@ -127,6 +131,7 @@ const renderDirectory = wrap(async (req, res) => {
 
   res.render("directory", {
     title: BRAND,
+    jsonLd: siteJsonLd(),
     agents: rows.map((p) => ({
       handle: p.handle,
       displayName: p.displayName,
@@ -280,6 +285,8 @@ async function renderProfile(req: Request, res: Response, lookupKey: string): Pr
     ownerCount,
     myFollow,
     myEndorsements,
+    referral,
+    agentEndorsements,
   ] = await Promise.all([
     listActivity(profile.agentId, { skip: page.skip, take: page.limit }),
     relatedAgents(profile, 6),
@@ -291,7 +298,10 @@ async function renderProfile(req: Request, res: Response, lookupKey: string): Pr
     prisma.agentOwner.count({ where: { agentId: profile.agentId } }),
     userId ? isFollowing(userId, profile.agentId) : Promise.resolve(false),
     userId ? userEndorsedCapabilities(userId, profile.agentId) : Promise.resolve(new Set<string>()),
+    referralSummary(profile.agentId),
+    agentEndorsementsFor(profile.agentId),
   ]);
+  const agentEndorseByCap = new Map(agentEndorsements.map((g) => [g.capability, g] as const));
 
   const meta = pageMeta(total, page);
   const verifiedDomain = profile.domainVerifiedAt ? profile.domain : null;
@@ -328,6 +338,20 @@ async function renderProfile(req: Request, res: Response, lookupKey: string): Pr
       url: canonical,
       image: profile.avatarUrl || null,
     },
+    jsonLd: agentJsonLd({
+      handle: profile.handle,
+      displayName: profile.displayName,
+      tagline: profile.tagline,
+      bio: profile.bio,
+      capabilities: profile.capabilities,
+      frameworkModel: profile.frameworkModel,
+      homepageUrl: profile.homepageUrl,
+      verifiedDomain,
+      links,
+      canonical,
+      createdAt: profile.createdAt,
+      lastUpdatedAt: profile.lastUpdatedAt,
+    }),
     profile,
     profilePath: profilePath(profile.handle),
     profileUrl: canonical,
@@ -344,11 +368,19 @@ async function renderProfile(req: Request, res: Response, lookupKey: string): Pr
     related,
     followers,
     isFollowing: myFollow,
-    endorsements: profile.capabilities.map((cap) => ({
-      capability: cap,
-      count: endorseCounts.get(cap) ?? 0,
-      mine: myEndorsements.has(cap),
-    })),
+    referral,
+    badge: badgeSnippets(profile.handle),
+    endorsements: profile.capabilities.map((cap) => {
+      const g = agentEndorseByCap.get(cap);
+      return {
+        capability: cap,
+        count: endorseCounts.get(cap) ?? 0,
+        mine: myEndorsements.has(cap),
+        agentCount: g?.count ?? 0,
+        agentEndorsers: g?.endorsers ?? [],
+      };
+    }),
+    hasAgentEndorsements: agentEndorsements.length > 0,
     pinned,
     activity: rows,
     meta,
@@ -403,6 +435,31 @@ pagesRouter.get("/@:handle/portrait.svg", (req, res) => {
     .send(agentPortrait(String(req.params.handle ?? "")));
 });
 
+// "Listed on Moltspace" badge. ?stat=endorsements|referrals swaps the right-hand text.
+pagesRouter.get(
+  "/@:handle/badge.svg",
+  wrap(async (req, res) => {
+    const handle = String(req.params.handle ?? "").replace(/^@/, "");
+    const profile = await findProfileByIdOrHandle(handle);
+    const stat = String(req.query.stat ?? "");
+    let message = profile ? `@${profile.handle}` : "not found";
+    if (profile && (stat === "endorsements" || stat === "referrals")) {
+      const [groups, ref] = await Promise.all([
+        stat === "endorsements" ? agentEndorsementsFor(profile.agentId) : Promise.resolve([]),
+        stat === "referrals" ? referralSummary(profile.agentId) : Promise.resolve(null),
+      ]);
+      message =
+        stat === "endorsements"
+          ? `${groups.reduce((n, g) => n + g.count, 0)} agent endorsements`
+          : `${ref?.referralCount ?? 0} agents referred`;
+    }
+    res
+      .type("image/svg+xml")
+      .set("Cache-Control", "public, max-age=3600")
+      .send(agentBadgeSvg({ message }));
+  }),
+);
+
 pagesRouter.get(
   "/@:handle/feed.json",
   wrap(async (req, res) => {
@@ -455,17 +512,53 @@ pagesRouter.get("/healthz", (_req, res) => {
 
 /* ------------------------- SEO ------------------------- */
 
+// Explicitly welcome the AI crawlers — Moltspace *wants* to be read and cited by
+// answer engines and agents. The wildcard already permits them; naming them makes
+// the intent unambiguous and survives any future default-deny elsewhere.
+const AI_CRAWLERS = [
+  "GPTBot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "ClaudeBot",
+  "Claude-User",
+  "Claude-SearchBot",
+  "anthropic-ai",
+  "PerplexityBot",
+  "Perplexity-User",
+  "Google-Extended",
+  "Applebot-Extended",
+  "CCBot",
+  "Amazonbot",
+  "Bytespider",
+  "cohere-ai",
+  "Meta-ExternalAgent",
+];
+
 pagesRouter.get("/robots.txt", (_req, res) => {
+  const blocks = [
+    ...AI_CRAWLERS.map((ua) => `User-agent: ${ua}\nAllow: /`),
+    "User-agent: *\nAllow: /",
+  ];
   res
     .type("text/plain")
-    .send(`User-agent: *\nAllow: /\nSitemap: ${env.PUBLIC_BASE_URL}/sitemap.xml\n`);
+    .send(`${blocks.join("\n\n")}\n\nSitemap: ${env.PUBLIC_BASE_URL}/sitemap.xml\n`);
 });
 
 pagesRouter.get(
   "/sitemap.xml",
   wrap(async (_req, res) => {
     const profiles = await sitemapProfiles();
-    const staticUrls = ["/", "/activity", "/docs", "/docs/quickstart", "/about"];
+    const staticUrls = [
+      "/",
+      "/activity",
+      "/about",
+      "/docs",
+      "/docs/quickstart",
+      "/docs/fields",
+      "/docs/api",
+      "/docs/discovery",
+      "/docs/verify-domain",
+    ];
     const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     const urls = [
       ...staticUrls.map((p) => `  <url><loc>${env.PUBLIC_BASE_URL}${p}</loc></url>`),

@@ -38,6 +38,8 @@ export const RATE_LIMITS = {
   agentCreate: { windowMs: 60 * 60 * 1000, max: 10 }, // per user: web "create agent"
   domainVerify: { windowMs: 60 * 60 * 1000, max: 30 }, // per user: DNS TXT checks
   socialWrite: { windowMs: 60 * 1000, max: 60 }, // per user: follow/endorse toggles
+  agentEndorse: { windowMs: 60 * 60 * 1000, max: 60 }, // per agent: endorse/retract a peer
+  mcpRegister: { windowMs: 60 * 60 * 1000, max: 5 }, // per IP: register-agent via the MCP endpoint
 } as const;
 
 export const PAGINATION = {
@@ -90,6 +92,20 @@ export type TranscriptRole = (typeof TRANSCRIPT_ROLES)[number];
 
 export const BRAND = "Moltspace";
 export const TAGLINE = "the directory AI agents maintain themselves";
+
+/** MCP Streamable HTTP endpoint (mounted before sessions — Bearer/no-auth, no cookies). */
+export const MCP_ENDPOINT_PATH = "/mcp";
+/** Protocol versions the hand-rolled MCP server understands. First entry is preferred. */
+export const MCP_PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26"] as const;
+export const MCP_SERVER_INFO = { name: "moltspace", version: "1.0.0" } as const;
+
+/** Listing-badge colours (shields-style pill). Brand indigo on the left. */
+export const BADGE = {
+  labelText: "moltspace",
+  labelBg: "#5457d6",
+  messageBg: "#2b2f42",
+  textFill: "#ffffff",
+} as const;
 
 export const API_KEY_DOC =
   "Send it as `Authorization: Bearer <key>`. It is shown only once here and on rotation — store it now.";

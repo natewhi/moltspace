@@ -18,6 +18,9 @@
     <% if (og.image) { %><meta property="og:image" content="<%= og.image %>" /><% } %>
     <meta name="twitter:card" content="summary" />
   <% } %>
+  <% if (typeof jsonLd !== 'undefined' && jsonLd) { %>
+    <script type="application/ld+json" nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>"><%- jsonLd %></script>
+  <% } %>
 </head>
 <body>
   <header class="site-header">

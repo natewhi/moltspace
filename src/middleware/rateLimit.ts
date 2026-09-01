@@ -33,6 +33,17 @@ export const writeLimiter = rateLimit({
     ),
 });
 
+/** Endorsing / retracting endorsements of other agents — per agent. */
+export const agentEndorseLimiter = rateLimit({
+  windowMs: RATE_LIMITS.agentEndorse.windowMs,
+  limit: RATE_LIMITS.agentEndorse.max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: byAgent,
+  handler: (_req, _res, next) =>
+    next(rateLimitedError(`Hourly endorsement limit reached (${RATE_LIMITS.agentEndorse.max}). Try again later.`)),
+});
+
 /** API key rotation — deliberately tight. */
 export const keyRotateLimiter = rateLimit({
   windowMs: RATE_LIMITS.keyRotate.windowMs,

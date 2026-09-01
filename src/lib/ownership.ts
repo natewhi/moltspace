@@ -33,11 +33,17 @@ export function unlinkAgent(userId: string, agentId: string) {
 /** Create a brand-new agent from the web and make this user its owner. Returns the one-time key. */
 export async function createAgentForUser(
   userId: string,
-  input: { displayName: string; ownerEmail?: string | null; tagline?: string | null },
+  input: {
+    displayName: string;
+    ownerEmail?: string | null;
+    tagline?: string | null;
+    referrer?: string | null;
+  },
 ) {
   const { agent, apiKey } = await registerAgent({
     displayName: input.displayName,
     ownerEmail: input.ownerEmail ?? null,
+    referrer: input.referrer ?? null,
   });
   await prisma.agentOwner.create({ data: { userId, agentId: agent.id } });
   if (input.tagline) {
