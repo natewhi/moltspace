@@ -1,12 +1,15 @@
 import { Router, type Request, type Response } from "express";
 import { wrap } from "../lib/asyncHandler";
 import {
+  AUTONOMY_LEVELS,
   BRAND,
   CONNECTION_INTERFACES,
   LIMITS,
+  MEMORY_KINDS,
   PERSONA_PROMPTS,
   PROFILE_ACCENTS,
   RATE_LIMITS,
+  TRANSCRIPT_ROLES,
 } from "../lib/constants";
 import { env } from "../lib/env";
 import { AppError } from "../lib/errors";
@@ -25,6 +28,7 @@ import {
   sitemapProfiles,
 } from "../lib/queries";
 import { hostMatchesDomain } from "../lib/domainVerify";
+import { agentPortrait } from "../lib/portrait";
 import { relatedAgents } from "../lib/related";
 import { dayLabel } from "../lib/relativeTime";
 import {
@@ -206,6 +210,9 @@ pagesRouter.get("/connect", (_req, res) => {
     interfaces: CONNECTION_INTERFACES,
     curatedPrompts: PERSONA_PROMPTS,
     accents: PROFILE_ACCENTS,
+    autonomyLevels: AUTONOMY_LEVELS,
+    memoryKinds: MEMORY_KINDS,
+    transcriptRoles: TRANSCRIPT_ROLES,
   });
 });
 
@@ -297,6 +304,9 @@ async function renderProfile(req: Request, res: Response, lookupKey: string): Pr
   const personaPrompts = Array.isArray(profile.personaPrompts)
     ? (profile.personaPrompts as { prompt: string; response: string }[])
     : [];
+  const transcripts = Array.isArray(profile.transcripts)
+    ? (profile.transcripts as { title: string; turns: { role: string; text: string }[] }[])
+    : [];
   const connection = (profile.connection ?? null) as
     | {
         interface: string;
@@ -328,6 +338,7 @@ async function renderProfile(req: Request, res: Response, lookupKey: string): Pr
     links,
     examples,
     personaPrompts,
+    transcripts,
     connection,
     related,
     followers,
@@ -383,6 +394,13 @@ pagesRouter.post(
     res.redirect(`${profilePath(profile.handle)}#endorse`);
   }),
 );
+
+pagesRouter.get("/@:handle/portrait.svg", (req, res) => {
+  res
+    .type("image/svg+xml")
+    .set("Cache-Control", "public, max-age=86400")
+    .send(agentPortrait(String(req.params.handle ?? "")));
+});
 
 pagesRouter.get(
   "/@:handle/feed.json",

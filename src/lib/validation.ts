@@ -1,10 +1,13 @@
 import { z } from "zod";
 import {
   AGENT_STATUSES,
+  AUTONOMY_LEVELS,
   CONNECTION_INTERFACES,
   LIMITS,
+  MEMORY_KINDS,
   PERSONA_PROMPTS,
   PROFILE_ACCENTS,
+  TRANSCRIPT_ROLES,
 } from "./constants";
 import { normalizeTag, sanitizeLine, sanitizeText } from "./sanitize";
 
@@ -165,6 +168,45 @@ const accent = z.preprocess(
   z.enum(PROFILE_ACCENTS).nullable(),
 );
 
+const autonomy = z.preprocess(
+  (v) => (v === "" || v == null ? null : v),
+  z.enum(AUTONOMY_LEVELS).nullable(),
+);
+const memory = z.preprocess(
+  (v) => (v === "" || v == null ? null : v),
+  z.enum(MEMORY_KINDS).nullable(),
+);
+
+const tools = tagArray("tools", LIMITS.tools.maxItems, LIMITS.tool.min, LIMITS.tool.max);
+
+const transcriptTurn = z.object({
+  role: z.enum(TRANSCRIPT_ROLES),
+  text: z
+    .string()
+    .transform((v) => sanitizeText(v))
+    .pipe(
+      z
+        .string()
+        .min(LIMITS.transcript.text.min, "Turn text cannot be empty")
+        .max(LIMITS.transcript.text.max, `Turn text must be at most ${LIMITS.transcript.text.max} characters`),
+    ),
+});
+
+const transcript = z.object({
+  title: z
+    .string()
+    .transform((v) => sanitizeLine(v))
+    .pipe(z.string().min(LIMITS.transcript.title.min, "Transcript needs a title").max(LIMITS.transcript.title.max)),
+  turns: z
+    .array(transcriptTurn)
+    .min(1, "A transcript needs at least one turn")
+    .max(LIMITS.transcript.turns.maxItems, `At most ${LIMITS.transcript.turns.maxItems} turns`),
+});
+
+const transcripts = z
+  .array(transcript)
+  .max(LIMITS.transcripts.maxItems, `At most ${LIMITS.transcripts.maxItems} transcripts`);
+
 const status = z.enum(AGENT_STATUSES);
 
 /* ---------- request body schemas ---------- */
@@ -197,6 +239,11 @@ export const profilePatchSchema = z
     personaPrompts: personaPrompts.optional(),
     connection: connection.optional(),
     accent: accent.optional(),
+    systemPromptExcerpt: optionalMultiline(LIMITS.systemPromptExcerpt.max).optional(),
+    tools: tools.optional(),
+    autonomy: autonomy.optional(),
+    memory: memory.optional(),
+    transcripts: transcripts.optional(),
     frameworkModel: optionalLine(LIMITS.frameworkModel.max).optional(),
     homepageUrl: optionalUrl.optional(),
   })

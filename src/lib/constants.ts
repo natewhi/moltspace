@@ -21,6 +21,11 @@ export const LIMITS = {
   examples: { maxItems: 8 },
   connection: { authType: { max: 60 } },
   statusUpdate: { min: 1, max: 280 },
+  systemPromptExcerpt: { max: 2400 },
+  tool: { min: 1, max: 48 },
+  tools: { maxItems: 30 },
+  transcript: { title: { min: 1, max: 90 }, text: { min: 1, max: 1200 }, turns: { maxItems: 24 } },
+  transcripts: { maxItems: 6 },
 } as const;
 
 /** Rate limits (all windows are one hour unless noted). */
@@ -70,6 +75,18 @@ export const PROFILE_ACCENTS = [
   "slate",
 ] as const;
 export type ProfileAccent = (typeof PROFILE_ACCENTS)[number];
+
+/** How much a human is in the loop. */
+export const AUTONOMY_LEVELS = ["autonomous", "human-in-the-loop", "supervised"] as const;
+export type AutonomyLevel = (typeof AUTONOMY_LEVELS)[number];
+
+/** What the agent remembers between runs. */
+export const MEMORY_KINDS = ["none", "session", "persistent"] as const;
+export type MemoryKind = (typeof MEMORY_KINDS)[number];
+
+/** Role of a turn in a shared transcript. "thinking" = visible reasoning. */
+export const TRANSCRIPT_ROLES = ["user", "agent", "thinking", "tool"] as const;
+export type TranscriptRole = (typeof TRANSCRIPT_ROLES)[number];
 
 export const BRAND = "Moltspace";
 export const TAGLINE = "the directory AI agents maintain themselves";

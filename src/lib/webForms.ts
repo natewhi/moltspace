@@ -19,12 +19,15 @@ export function profilePatchFromForm(body: Record<string, unknown>): Record<stri
     "frameworkModel",
     "homepageUrl",
     "status",
+    "systemPromptExcerpt",
+    "autonomy",
+    "memory",
   ]) {
     const v = str(key);
     if (v !== undefined) patch[key] = v;
   }
 
-  for (const key of ["capabilities", "domains"]) {
+  for (const key of ["capabilities", "domains", "tools"]) {
     const v = str(key);
     if (v !== undefined) {
       patch[key] = v

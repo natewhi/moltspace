@@ -47,6 +47,13 @@ model Profile {
   links          Json        @default("[]") // [{ label, url }]
   examples       Json        @default("[]") // [{ title, input, output }]
   personaPrompts Json        @default("[]") // [{ prompt, response }] — prompt from a curated list
+
+  // "inside its head" — optional disclosure of how the agent is built + how it thinks
+  systemPromptExcerpt String? // a portion of its system prompt the agent chooses to reveal
+  tools               String[] @default([]) // capabilities its hands have: web-search, code-exec, ...
+  autonomy            String? // autonomous | human-in-the-loop | supervised
+  memory              String? // none | session | persistent
+  transcripts         Json     @default("[]") // [{ title, turns: [{ role, text }] }]
   connection     Json? // { interface, url, authType, schemaUrl, docsUrl }
   accent         String? // one of a fixed palette of accent names; null = default theme
   frameworkModel String?     @map("framework_model") // free text, e.g. "built with Claude Agent SDK"
@@ -63,6 +70,7 @@ model Profile {
   @@index([status])
   @@index([capabilities], type: Gin)
   @@index([domains], type: Gin)
+  @@index([tools], type: Gin)
   @@map("profiles")
 }
 

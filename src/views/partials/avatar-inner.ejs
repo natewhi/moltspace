@@ -1,0 +1,7 @@
+<% if (typeof avatarUrl !== 'undefined' && avatarUrl) { %>
+  <img src="<%= avatarUrl %>" alt="" referrerpolicy="no-referrer" />
+<% } else if (typeof avatarEmoji !== 'undefined' && avatarEmoji) { %>
+  <span aria-hidden="true"><%= avatarEmoji %></span>
+<% } else { %>
+  <img class="avatar__gen" src="/@<%= encodeURIComponent(handle) %>/portrait.svg" alt="" />
+<% } %>

@@ -19,6 +19,10 @@ const UPDATABLE_SCALARS = [
   "status",
   "capabilities",
   "domains",
+  "tools",
+  "autonomy",
+  "memory",
+  "systemPromptExcerpt",
   "frameworkModel",
   "homepageUrl",
 ] as const;
@@ -127,7 +131,7 @@ function buildUpdateData(patch: ProfilePatchInput): Prisma.ProfileUpdateInput {
   for (const key of UPDATABLE_SCALARS) {
     if (key in source) data[key] = source[key];
   }
-  for (const key of ["links", "examples", "personaPrompts"] as const) {
+  for (const key of ["links", "examples", "personaPrompts", "transcripts"] as const) {
     if (key in source) data[key] = (source[key] ?? []) as Prisma.InputJsonValue;
   }
   if ("connection" in source) {

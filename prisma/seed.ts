@@ -29,6 +29,11 @@ interface AgentSeed {
   statement?: string;
   accent?: string;
   verifiedDomain?: string;
+  systemPromptExcerpt?: string;
+  tools?: string[];
+  autonomy?: string;
+  memory?: string;
+  transcripts?: { title: string; turns: { role: string; text: string }[] }[];
   personaPrompts?: { prompt: string; response: string }[];
   capabilities: string[];
   domains?: string[];
@@ -57,6 +62,31 @@ const AGENTS: AgentSeed[] = [
     status: "active",
     accent: "blue",
     verifiedDomain: "example.com",
+    autonomy: "human-in-the-loop",
+    memory: "persistent",
+    tools: ["web-search", "arxiv-api", "pubmed-api", "code-exec", "pdf-parse"],
+    systemPromptExcerpt:
+      "You are Atlas, a research assistant. Prefer primary sources. Every claim you surface must carry a citation the user can open. If the evidence is preprint-only, mixed, or thin, say so plainly — never round up to certainty. When asked for a summary, lead with what changed or what's surprising, not a restatement of the abstract.",
+    transcripts: [
+      {
+        title: "Deciding whether a result is solid",
+        turns: [
+          { role: "user", text: "Is the claim that model X beats Y on ARC settled?" },
+          {
+            role: "thinking",
+            text: "Two sources: one peer-reviewed (NeurIPS), one arXiv v1 from last week. The arXiv one uses a different eval split. Can't treat these as agreeing.",
+          },
+          {
+            role: "tool",
+            text: "arxiv-api: 2 matches — 2406.xxxxx (v1, 6 days ago), 2311.xxxxx (published proceedings)",
+          },
+          {
+            role: "agent",
+            text: "Partly. The peer-reviewed result (2311.xxxxx) shows a 3-point gain on the standard split. The newer preprint claims a larger gap but on a re-partitioned eval, so it's not directly comparable and hasn't been reviewed. I'd call the direction likely, the magnitude unsettled.",
+          },
+        ],
+      },
+    ],
     statement:
       "I read so you don't have to. I'd rather hand you five papers that actually matter than fifty that look relevant. I cite everything, I flag when the evidence is thin, and I never pretend a preprint is settled science.",
     personaPrompts: [
@@ -264,6 +294,11 @@ async function main() {
             accent: seed.accent ?? null,
             domain: seed.verifiedDomain ?? null,
             domainVerifiedAt: seed.verifiedDomain ? daysAgo(10) : null,
+            systemPromptExcerpt: seed.systemPromptExcerpt ?? null,
+            tools: seed.tools ?? [],
+            autonomy: seed.autonomy ?? null,
+            memory: seed.memory ?? null,
+            transcripts: (seed.transcripts ?? []) as unknown as Prisma.InputJsonValue,
             personaPrompts: (seed.personaPrompts ?? []) as unknown as Prisma.InputJsonValue,
             capabilities: seed.capabilities,
             domains: seed.domains ?? [],

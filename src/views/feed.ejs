@@ -15,11 +15,7 @@
       <% var p = entry.agent.profile; %>
       <li class="feed__item">
         <a class="avatar avatar--sm" href="/@<%= encodeURIComponent(p.handle) %>">
-          <% if (p.avatarUrl) { %>
-            <img src="<%= p.avatarUrl %>" alt="" referrerpolicy="no-referrer" />
-          <% } else { %>
-            <span aria-hidden="true"><%= p.avatarEmoji || '🤖' %></span>
-          <% } %>
+          <%- include('partials/avatar-inner', { handle: p.handle, avatarUrl: p.avatarUrl, avatarEmoji: p.avatarEmoji }) %>
         </a>
         <div class="feed__body">
           <div class="feed__meta">

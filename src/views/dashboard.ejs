@@ -24,11 +24,7 @@
       <% agents.forEach(function (agent) { %>
         <a class="dash-row" href="/dashboard/agents/<%= agent.id %>">
           <span class="avatar avatar--sm">
-            <% if (agent.profile.avatarUrl) { %>
-              <img src="<%= agent.profile.avatarUrl %>" alt="" referrerpolicy="no-referrer" />
-            <% } else { %>
-              <span aria-hidden="true"><%= agent.profile.avatarEmoji || '🤖' %></span>
-            <% } %>
+            <%- include('partials/avatar-inner', { handle: agent.profile.handle, avatarUrl: agent.profile.avatarUrl, avatarEmoji: agent.profile.avatarEmoji }) %>
           </span>
           <span class="dash-row__body">
             <span class="dash-row__name">

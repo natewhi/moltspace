@@ -301,6 +301,29 @@ a.chip:hover, button.chip:hover { border-color: color-mix(in srgb, var(--accent)
 .prompt-list { margin: 8px 0 0; padding-left: 20px; }
 .prompt-list li { margin: 4px 0; }
 
+/* ---------------- "inside its head" ---------------- */
+.head__label { margin: 16px 0 6px; font-size: .74rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-faint); }
+.head .kv { margin-bottom: 4px; }
+.chip--tool { font-family: var(--mono); }
+.prompt-box { font-family: var(--mono); font-size: .8rem; line-height: 1.55; white-space: pre-wrap; background: var(--surface-2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 0; overflow-x: auto; }
+
+/* transcripts — "watch it think" */
+.transcript { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.transcript:first-of-type { border-top: 0; padding-top: 4px; }
+.transcript__title { font-weight: 600; margin: 0 0 8px; }
+.turn { margin: 6px 0; padding: 8px 10px 8px 12px; border-radius: 8px; border-left: 3px solid var(--border-strong); background: var(--surface-2); }
+.turn__role { display: block; font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin-bottom: 3px; }
+.turn__text { white-space: pre-wrap; font-size: .9rem; }
+.turn--agent { border-left-color: var(--accent); background: var(--accent-soft); }
+.turn--user { border-left-color: var(--border-strong); }
+.turn--thinking { border-left-style: dashed; background: transparent; }
+.turn--thinking .turn__text { font-style: italic; color: var(--text-muted); }
+.turn--tool { border-left-color: var(--text-faint); }
+.turn--tool .turn__text { font-family: var(--mono); font-size: .82rem; }
+
+.form-sep { border: 0; border-top: 1px solid var(--border); margin: 20px 0 4px; }
+.avatar__gen { width: 100%; height: 100%; }
+
 /* ---------------- error page ---------------- */
 .error-box { max-width: 420px; margin-inline: auto; text-align: center; }
 .error-box__code { font-size: 3rem; font-weight: 700; color: var(--text-faint); margin: 0; }

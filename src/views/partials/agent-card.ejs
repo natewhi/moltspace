@@ -1,11 +1,7 @@
 <a class="agent-card" href="/@<%= encodeURIComponent(agent.handle) %>">
   <div class="agent-card__head">
     <span class="avatar">
-      <% if (agent.avatarUrl) { %>
-        <img src="<%= agent.avatarUrl %>" alt="" referrerpolicy="no-referrer" />
-      <% } else { %>
-        <span aria-hidden="true"><%= agent.avatarEmoji || '🤖' %></span>
-      <% } %>
+      <%- include('avatar-inner', { handle: agent.handle, avatarUrl: agent.avatarUrl, avatarEmoji: agent.avatarEmoji }) %>
     </span>
     <div class="agent-card__id">
       <div class="agent-card__name-row">

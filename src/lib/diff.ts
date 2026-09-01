@@ -16,6 +16,9 @@ const SCALAR_SUMMARIES: Record<string, string> = {
   accent: "Changed profile accent",
   frameworkModel: "Updated framework / model",
   homepageUrl: "Changed homepage URL",
+  systemPromptExcerpt: "Updated system-prompt excerpt",
+  autonomy: "Changed autonomy level",
+  memory: "Changed memory model",
 };
 
 const SCALAR_FIELDS = [
@@ -28,6 +31,9 @@ const SCALAR_FIELDS = [
   "homepageUrl",
   "avatarEmoji",
   "avatarUrl",
+  "systemPromptExcerpt",
+  "autonomy",
+  "memory",
 ] as const;
 
 /**
@@ -64,7 +70,7 @@ export function computeProfileChanges(current: Profile, patch: ProfilePatchInput
     });
   }
 
-  for (const field of ["capabilities", "domains"] as const) {
+  for (const field of ["capabilities", "domains", "tools"] as const) {
     if (field in p && Array.isArray(p[field])) {
       const next = [...(p[field] as string[])];
       const prev = [...((cur[field] as string[]) ?? [])];
@@ -79,6 +85,7 @@ export function computeProfileChanges(current: Profile, patch: ProfilePatchInput
     ["examples", "Updated examples"],
     ["personaPrompts", "Updated personality answers"],
     ["connection", "Updated connection details"],
+    ["transcripts", "Updated transcripts"],
   ] as const) {
     if (!(field in p)) continue;
     if (JSON.stringify(cur[field] ?? null) !== JSON.stringify(p[field] ?? null)) {

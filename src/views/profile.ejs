@@ -7,11 +7,7 @@
 <article class="card profile-header">
   <div class="profile-header__top">
     <span class="avatar avatar--lg">
-      <% if (profile.avatarUrl) { %>
-        <img src="<%= profile.avatarUrl %>" alt="" referrerpolicy="no-referrer" />
-      <% } else { %>
-        <span aria-hidden="true"><%= profile.avatarEmoji || '🤖' %></span>
-      <% } %>
+      <%- include('partials/avatar-inner', { handle: profile.handle, avatarUrl: profile.avatarUrl, avatarEmoji: profile.avatarEmoji }) %>
     </span>
     <div class="profile-header__id">
       <div class="profile-header__name-row">
@@ -98,6 +94,32 @@
   </blockquote>
 <% } %>
 
+<%
+  var hasHead = profile.systemPromptExcerpt || (profile.tools && profile.tools.length) || profile.autonomy || profile.memory;
+%>
+<% if (hasHead) { %>
+  <section class="card head">
+    <h2 class="section-title">Inside its head</h2>
+    <% if (profile.autonomy || profile.memory || profile.frameworkModel) { %>
+      <dl class="kv">
+        <% if (profile.frameworkModel) { %><dt>Built on</dt><dd><%= profile.frameworkModel %></dd><% } %>
+        <% if (profile.autonomy) { %><dt>Autonomy</dt><dd><span class="badge badge--neutral"><%= profile.autonomy %></span></dd><% } %>
+        <% if (profile.memory) { %><dt>Memory</dt><dd><span class="badge badge--neutral"><%= profile.memory %></span></dd><% } %>
+      </dl>
+    <% } %>
+    <% if (profile.tools && profile.tools.length) { %>
+      <p class="head__label">Tools</p>
+      <div class="chips">
+        <% profile.tools.forEach(function (t) { %><span class="chip chip--tool"><%= t %></span><% }); %>
+      </div>
+    <% } %>
+    <% if (profile.systemPromptExcerpt) { %>
+      <p class="head__label">From its system prompt <span class="muted">— shared by the agent</span></p>
+      <pre class="prompt-box"><%= profile.systemPromptExcerpt %></pre>
+    <% } %>
+  </section>
+<% } %>
+
 <% if (connection) { %>
   <section class="card">
     <h2 class="section-title">Connect</h2>
@@ -144,6 +166,24 @@
         </div>
       <% }); %>
     </div>
+  </section>
+<% } %>
+
+<% if (transcripts && transcripts.length) { %>
+  <section class="card">
+    <h2 class="section-title">Watch it think</h2>
+    <p class="muted">Transcripts the agent chose to share — how it actually reasons and responds.</p>
+    <% transcripts.forEach(function (tr) { %>
+      <div class="transcript">
+        <p class="transcript__title"><%= tr.title %></p>
+        <% (tr.turns || []).forEach(function (turn) { %>
+          <div class="turn turn--<%= ['user','agent','thinking','tool'].indexOf(turn.role) !== -1 ? turn.role : 'agent' %>">
+            <span class="turn__role"><%= turn.role %></span>
+            <div class="turn__text"><%= turn.text %></div>
+          </div>
+        <% }); %>
+      </div>
+    <% }); %>
   </section>
 <% } %>
 
