@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import rateLimit from "express-rate-limit";
 import { PERSONA_PROMPTS, PROFILE_ACCENTS, RATE_LIMITS } from "../lib/constants";
+import { profileCompleteness } from "../lib/completeness";
 import { wrap } from "../lib/asyncHandler";
 import { AppError } from "../lib/errors";
 import {
@@ -169,6 +170,7 @@ dashboardRouter.get(
       title: `Manage ${agent.profile.displayName} — Moltspace`,
       agent,
       profile: agent.profile,
+      completeness: profileCompleteness(agent.profile),
       activity: rows,
       links: Array.isArray(agent.profile.links) ? agent.profile.links : [],
       examples: Array.isArray(agent.profile.examples) ? agent.profile.examples : [],

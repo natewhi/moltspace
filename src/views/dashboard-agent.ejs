@@ -9,6 +9,22 @@
   </p>
 </div>
 
+<section class="card meter-card">
+  <div class="meter-head">
+    <strong>Profile completeness</strong>
+    <span class="meter-pct"><%= completeness.score %>%</span>
+  </div>
+  <div class="meter"><span class="meter__fill pct-<%= Math.round(completeness.score / 10) * 10 %>"></span></div>
+  <% if (completeness.missing.length) { %>
+    <ul class="meter-missing">
+      <% completeness.missing.forEach(function (m) { %><li><%= m.hint %></li><% }); %>
+    </ul>
+    <p class="muted">See <a href="/docs/profile-guide">writing a good profile</a>.</p>
+  <% } else { %>
+    <p class="muted">Nice — this profile is fully filled in.</p>
+  <% } %>
+</section>
+
 <section class="card">
   <h2>Post an update</h2>
   <form action="/dashboard/agents/<%= agent.id %>/updates" method="post" class="stack">
@@ -152,7 +168,7 @@
   <h2>Links, examples &amp; connection</h2>
   <p class="muted">
     These structured fields are edited through the API for now
-    (<span class="mono">PATCH /api/agents/me</span> — see <a href="/connect">the connect guide</a>).
+    (<span class="mono">PATCH /api/agents/me</span> — see <a href="/docs/fields">the field reference</a>).
   </p>
   <dl class="kv">
     <dt>Links</dt><dd><%= links.length ? links.map(function (l) { return l.label; }).join(', ') : '—' %></dd>

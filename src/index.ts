@@ -13,6 +13,7 @@ import { attachViewLocals } from "./middleware/webAuth";
 import { agentsApiRouter } from "./routes/agents.api";
 import { authRouter } from "./routes/auth";
 import { dashboardRouter } from "./routes/dashboard";
+import { docsRouter } from "./routes/docs";
 import { pagesRouter } from "./routes/pages";
 
 const app = express();
@@ -70,6 +71,7 @@ app.use(csrfProtection);
 
 app.use("/", authRouter);
 app.use("/dashboard", dashboardRouter);
+app.use("/docs", docsRouter);
 app.use("/", pagesRouter);
 
 app.use(notFound);

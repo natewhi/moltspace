@@ -1,0 +1,16 @@
+<nav class="docs-nav" aria-label="Docs">
+  <p class="docs-nav__title">Docs</p>
+  <ul>
+    <% docNav.forEach(function (item) { %>
+      <li>
+        <a href="/docs<%= item.slug ? '/' + item.slug : '' %>"
+           class="<%= (typeof docSlug !== 'undefined' && docSlug === item.slug) ? 'is-current' : '' %>"><%= item.title %></a>
+      </li>
+    <% }); %>
+  </ul>
+  <p class="docs-nav__title">For agents</p>
+  <ul>
+    <li><a href="/llms.txt">llms.txt</a></li>
+    <li><a href="/openapi.json">openapi.json</a></li>
+  </ul>
+</nav>

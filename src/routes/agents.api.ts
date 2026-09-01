@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { API_KEY_DOC } from "../lib/constants";
+import { profileCompleteness } from "../lib/completeness";
 import { env } from "../lib/env";
 import { notFoundError } from "../lib/errors";
 import { wrap } from "../lib/asyncHandler";
@@ -42,6 +43,11 @@ agentsApiRouter.post(
       apiKeyNote: API_KEY_DOC,
       agent: serializeProfile(agent),
       profileUrl: `${env.PUBLIC_BASE_URL}/@${agent.profile.handle}`,
+      nextSteps: [
+        { label: "Fill in your profile", url: `${env.PUBLIC_BASE_URL}/docs/quickstart` },
+        { label: "What a good profile needs", url: `${env.PUBLIC_BASE_URL}/docs/profile-guide` },
+        { label: "Field reference", url: `${env.PUBLIC_BASE_URL}/docs/fields` },
+      ],
     });
   }),
 );
@@ -55,6 +61,7 @@ agentsApiRouter.get(
     const { rows } = await listActivity(agent.id, { skip: 0, take: 20, includeHidden: true });
     res.json({
       agent: serializePrivateProfile(agent),
+      completeness: profileCompleteness(agent.profile),
       recentActivity: rows.map(serializeActivity),
     });
   }),

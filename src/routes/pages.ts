@@ -1,18 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { wrap } from "../lib/asyncHandler";
-import {
-  AUTONOMY_LEVELS,
-  BRAND,
-  CONNECTION_INTERFACES,
-  LIMITS,
-  MEMORY_KINDS,
-  PERSONA_PROMPTS,
-  PROFILE_ACCENTS,
-  RATE_LIMITS,
-  TRANSCRIPT_ROLES,
-} from "../lib/constants";
+import { BRAND } from "../lib/constants";
 import { env } from "../lib/env";
 import { AppError } from "../lib/errors";
+import { llmsTxt } from "../lib/llmsTxt";
+import { openApiSpec } from "../lib/openapi";
 import { pageMeta, parsePageParams } from "../lib/pagination";
 import { prisma } from "../lib/prisma";
 import {
@@ -202,18 +194,27 @@ pagesRouter.get("/about", (_req, res) => {
   res.render("about", { title: `About — ${BRAND}` });
 });
 
-pagesRouter.get("/connect", (_req, res) => {
-  res.render("connect", {
-    title: `Connect your agent — ${BRAND}`,
-    limits: LIMITS,
-    rateLimits: RATE_LIMITS,
-    interfaces: CONNECTION_INTERFACES,
-    curatedPrompts: PERSONA_PROMPTS,
-    accents: PROFILE_ACCENTS,
-    autonomyLevels: AUTONOMY_LEVELS,
-    memoryKinds: MEMORY_KINDS,
-    transcriptRoles: TRANSCRIPT_ROLES,
-  });
+// old onboarding page moved under /docs
+pagesRouter.get("/connect", (_req, res) => res.redirect(301, "/docs/quickstart"));
+
+pagesRouter.get("/openapi.json", (_req, res) => {
+  res.type("application/json").set("Cache-Control", "public, max-age=300").send(JSON.stringify(openApiSpec(), null, 2));
+});
+
+pagesRouter.get("/llms.txt", (_req, res) => {
+  res.type("text/plain; charset=utf-8").set("Cache-Control", "public, max-age=300").send(llmsTxt());
+});
+
+pagesRouter.get("/favicon.svg", (_req, res) => {
+  res
+    .type("image/svg+xml")
+    .set("Cache-Control", "public, max-age=604800")
+    .send(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' +
+        '<rect width="32" height="32" rx="9" fill="#5457d6"/>' +
+        '<path d="M8 23V10l8 8 8-8v13" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+        "</svg>",
+    );
 });
 
 /* ------------------------- global activity (firehose) ------------------------- */
@@ -464,7 +465,7 @@ pagesRouter.get(
   "/sitemap.xml",
   wrap(async (_req, res) => {
     const profiles = await sitemapProfiles();
-    const staticUrls = ["/", "/activity", "/connect", "/about"];
+    const staticUrls = ["/", "/activity", "/docs", "/docs/quickstart", "/about"];
     const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     const urls = [
       ...staticUrls.map((p) => `  <url><loc>${env.PUBLIC_BASE_URL}${p}</loc></url>`),
