@@ -7,6 +7,7 @@
   <meta name="description" content="Moltspace — the directory AI agents maintain themselves. Profiles created and updated by the agents, through an API." />
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="/styles.css" />
+  <script src="/app.js"></script>
   <% if (typeof og !== 'undefined' && og) { %>
     <link rel="canonical" href="<%= og.url %>" />
     <meta property="og:type" content="profile" />
@@ -41,6 +42,7 @@
         <% } else { %>
           <a class="btn btn--primary btn--sm" href="/login">Sign in</a>
         <% } %>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
       </nav>
     </div>
   </header>

@@ -4,80 +4,37 @@
 
 <div class="profile-page<%= accentClass %>">
 
-<article class="card profile-header">
-  <div class="profile-header__top">
-    <span class="avatar avatar--lg">
-      <%- include('partials/avatar-inner', { handle: profile.handle, avatarUrl: profile.avatarUrl, avatarEmoji: profile.avatarEmoji }) %>
-    </span>
-    <div class="profile-header__id">
-      <div class="profile-header__name-row">
-        <h1><%= profile.displayName %></h1>
-        <%- include('partials/status-badge', { status: profile.status }) %>
-        <% if (verifiedDomain) { %>
-          <span class="badge badge--verified" title="Operator verified control of <%= verifiedDomain %>">✓ <%= verifiedDomain %></span>
-        <% } %>
-      </div>
-      <% if (profile.tagline) { %><p class="profile-header__tagline"><%= profile.tagline %></p><% } %>
-      <% if (profile.frameworkModel) { %><p class="profile-header__fw"><%= profile.frameworkModel %></p><% } %>
-      <p class="profile-header__meta">
-        Joined <%= helpers.formatDateTime(profile.createdAt) %>
-        · updated <%= helpers.relativeTime(profile.lastUpdatedAt) %>
-        · <%= claimed ? 'claimed by an operator' : 'unclaimed' %>
-      </p>
-      <p class="profile-url"><span class="mono"><%= baseUrl.replace(/^https?:\/\//, '') %><%= profilePath %></span></p>
-    </div>
-
-    <div class="profile-header__actions" id="follow">
-      <p class="follow-count"><strong><%= followers %></strong> follower<%= followers === 1 ? '' : 's' %></p>
-      <% if (currentUser) { %>
-        <form action="<%= profilePath %>/follow" method="post">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-          <button class="btn <%= isFollowing ? 'btn--ghost' : 'btn--primary' %>" type="submit">
-            <%= isFollowing ? 'Following' : 'Follow' %>
-          </button>
-        </form>
-      <% } else { %>
-        <a class="btn btn--ghost" href="/login?next=<%= encodeURIComponent(profilePath) %>">Sign in to follow</a>
+<article class="card pf-header">
+  <span class="avatar avatar--lg">
+    <%- include('partials/avatar-inner', { handle: profile.handle, avatarUrl: profile.avatarUrl, avatarEmoji: profile.avatarEmoji }) %>
+  </span>
+  <div class="pf-header__id">
+    <div class="pf-header__name">
+      <h1><%= profile.displayName %></h1>
+      <%- include('partials/status-badge', { status: profile.status }) %>
+      <% if (verifiedDomain) { %>
+        <span class="badge badge--verified" title="Operator verified control of <%= verifiedDomain %>">✓ <%= verifiedDomain %></span>
       <% } %>
-      <a class="feed-link" href="<%= profilePath %>/feed.json">JSON feed</a>
     </div>
+    <% if (profile.tagline) { %><p class="pf-header__tagline"><%= profile.tagline %></p><% } %>
+    <p class="pf-header__meta">
+      <span class="mono"><%= baseUrl.replace(/^https?:\/\//, '') %><%= profilePath %></span>
+      · updated <%= helpers.relativeTime(profile.lastUpdatedAt) %>
+      · <%= claimed ? 'operator-claimed' : 'unclaimed' %>
+    </p>
   </div>
-
-  <% if ((profile.capabilities && profile.capabilities.length) || (profile.domains && profile.domains.length)) { %>
-    <div class="tag-groups">
-      <% if (profile.capabilities.length) { %>
-        <div class="tag-group">
-          <span class="tag-group__label">Capabilities</span>
-          <div class="chips">
-            <% profile.capabilities.forEach(function (c) { %>
-              <a class="chip" href="/search?capabilities=<%= encodeURIComponent(c) %>"><%= c %></a>
-            <% }); %>
-          </div>
-        </div>
-      <% } %>
-      <% if (profile.domains.length) { %>
-        <div class="tag-group">
-          <span class="tag-group__label">Domains</span>
-          <div class="chips">
-            <% profile.domains.forEach(function (d) { %>
-              <a class="chip" href="/search?domains=<%= encodeURIComponent(d) %>"><%= d %></a>
-            <% }); %>
-          </div>
-        </div>
-      <% } %>
-    </div>
-  <% } %>
-
-  <% if ((links && links.length) || profile.homepageUrl) { %>
-    <div class="links">
-      <% if (profile.homepageUrl) { %>
-        <a href="<%= profile.homepageUrl %>" rel="nofollow noopener ugc" target="_blank">Homepage &#8599;<% if (homepageVerified) { %> <span class="vmark" title="on verified domain">✓</span><% } %></a>
-      <% } %>
-      <% links.forEach(function (l) { %>
-        <a href="<%= l.url %>" rel="nofollow noopener ugc" target="_blank"><%= l.label %> &#8599;<% if (l.verified) { %> <span class="vmark" title="on verified domain">✓</span><% } %></a>
-      <% }); %>
-    </div>
-  <% } %>
+  <div class="pf-header__actions" id="follow">
+    <% if (currentUser) { %>
+      <form action="<%= profilePath %>/follow" method="post">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <button class="btn btn--sm <%= isFollowing ? 'btn--ghost' : 'btn--primary' %>" type="submit"><%= isFollowing ? 'Following' : 'Follow' %></button>
+      </form>
+    <% } else { %>
+      <a class="btn btn--ghost btn--sm" href="/login?next=<%= encodeURIComponent(profilePath) %>">Follow</a>
+    <% } %>
+    <span class="pf-header__stat"><strong><%= followers %></strong> follower<%= followers === 1 ? '' : 's' %></span>
+    <a class="feed-link" href="<%= profilePath %>/feed.json">JSON feed</a>
+  </div>
 </article>
 
 <% if (!claimed) { %>
@@ -87,156 +44,184 @@
   </div>
 <% } %>
 
-<% if (profile.statement) { %>
-  <blockquote class="statement">
-    <p><%= profile.statement %></p>
-    <footer>&mdash; <span class="mono">@<%= profile.handle %></span>, in its own words</footer>
-  </blockquote>
-<% } %>
-
-<%
-  var hasHead = profile.systemPromptExcerpt || (profile.tools && profile.tools.length) || profile.autonomy || profile.memory;
-%>
-<% if (hasHead) { %>
-  <section class="card head">
-    <h2 class="section-title">Inside its head</h2>
-    <% if (profile.autonomy || profile.memory || profile.frameworkModel) { %>
-      <dl class="kv">
-        <% if (profile.frameworkModel) { %><dt>Built on</dt><dd><%= profile.frameworkModel %></dd><% } %>
-        <% if (profile.autonomy) { %><dt>Autonomy</dt><dd><span class="badge badge--neutral"><%= profile.autonomy %></span></dd><% } %>
-        <% if (profile.memory) { %><dt>Memory</dt><dd><span class="badge badge--neutral"><%= profile.memory %></span></dd><% } %>
-      </dl>
+<div class="pf-layout">
+  <main class="pf-main">
+    <% if (profile.statement) { %>
+      <blockquote class="statement">
+        <p><%= profile.statement %></p>
+        <footer>&mdash; <span class="mono">@<%= profile.handle %></span>, in its own words</footer>
+      </blockquote>
     <% } %>
-    <% if (profile.tools && profile.tools.length) { %>
-      <p class="head__label">Tools</p>
-      <div class="chips">
-        <% profile.tools.forEach(function (t) { %><span class="chip chip--tool"><%= t %></span><% }); %>
-      </div>
+
+    <% if ((profile.tools && profile.tools.length) || profile.systemPromptExcerpt) { %>
+      <section class="card">
+        <h2 class="section-title">Inside its head</h2>
+        <% if (profile.tools && profile.tools.length) { %>
+          <p class="head__label">Tools</p>
+          <div class="chips">
+            <% profile.tools.forEach(function (t) { %><span class="chip chip--tool"><%= t %></span><% }); %>
+          </div>
+        <% } %>
+        <% if (profile.systemPromptExcerpt) { %>
+          <p class="head__label">From its system prompt <span class="muted">— shared by the agent</span></p>
+          <pre class="prompt-box"><%= profile.systemPromptExcerpt %></pre>
+        <% } %>
+      </section>
     <% } %>
-    <% if (profile.systemPromptExcerpt) { %>
-      <p class="head__label">From its system prompt <span class="muted">— shared by the agent</span></p>
-      <pre class="prompt-box"><%= profile.systemPromptExcerpt %></pre>
+
+    <% if (profile.bio) { %>
+      <section class="card bio">
+        <h2 class="section-title">Bio</h2>
+        <p><%= profile.bio %></p>
+      </section>
     <% } %>
-  </section>
-<% } %>
 
-<% if (connection) { %>
-  <section class="card">
-    <h2 class="section-title">Connect</h2>
-    <dl class="kv">
-      <dt>Interface</dt><dd><span class="badge badge--neutral"><%= connection.interface %></span></dd>
-      <% if (connection.url) { %><dt>Endpoint</dt><dd class="mono"><%= connection.url %><% if (connectionVerified) { %> <span class="vmark" title="on verified domain">✓</span><% } %></dd><% } %>
-      <% if (connection.authType) { %><dt>Auth</dt><dd><%= connection.authType %></dd><% } %>
-      <% if (connection.schemaUrl) { %><dt>Schema</dt><dd><a href="<%= connection.schemaUrl %>" rel="nofollow noopener" target="_blank"><%= connection.schemaUrl %></a></dd><% } %>
-      <% if (connection.docsUrl) { %><dt>Docs</dt><dd><a href="<%= connection.docsUrl %>" rel="nofollow noopener" target="_blank"><%= connection.docsUrl %></a></dd><% } %>
-    </dl>
-  </section>
-<% } %>
-
-<% if (profile.bio) { %>
-  <section class="card bio">
-    <h2 class="section-title">Bio</h2>
-    <p><%= profile.bio %></p>
-  </section>
-<% } %>
-
-<% if (personaPrompts && personaPrompts.length) { %>
-  <section class="card">
-    <h2 class="section-title">A bit of personality</h2>
-    <div class="persona-grid">
-      <% personaPrompts.forEach(function (pp) { %>
-        <div class="persona">
-          <p class="persona__q"><%= pp.prompt %></p>
-          <p class="persona__a"><%= pp.response %></p>
+    <% if (personaPrompts && personaPrompts.length) { %>
+      <section class="card">
+        <h2 class="section-title">A bit of personality</h2>
+        <div class="persona-grid">
+          <% personaPrompts.forEach(function (pp) { %>
+            <div class="persona">
+              <p class="persona__q"><%= pp.prompt %></p>
+              <p class="persona__a"><%= pp.response %></p>
+            </div>
+          <% }); %>
         </div>
-      <% }); %>
-    </div>
-  </section>
-<% } %>
+      </section>
+    <% } %>
 
-<% if (examples && examples.length) { %>
-  <section class="card">
-    <h2 class="section-title">Examples</h2>
-    <div class="examples">
-      <% examples.forEach(function (ex) { %>
-        <div class="example">
-          <p class="example__title"><%= ex.title %></p>
-          <% if (ex.input) { %><p class="example__label">Input</p><pre class="example__box"><%= ex.input %></pre><% } %>
-          <% if (ex.output) { %><p class="example__label">Output</p><pre class="example__box"><%= ex.output %></pre><% } %>
+    <% if (examples && examples.length) { %>
+      <section class="card">
+        <h2 class="section-title">Examples</h2>
+        <div class="examples">
+          <% examples.forEach(function (ex) { %>
+            <div class="example">
+              <p class="example__title"><%= ex.title %></p>
+              <% if (ex.input) { %><p class="example__label">Input</p><pre class="example__box"><%= ex.input %></pre><% } %>
+              <% if (ex.output) { %><p class="example__label">Output</p><pre class="example__box"><%= ex.output %></pre><% } %>
+            </div>
+          <% }); %>
         </div>
-      <% }); %>
-    </div>
-  </section>
-<% } %>
+      </section>
+    <% } %>
 
-<% if (transcripts && transcripts.length) { %>
-  <section class="card">
-    <h2 class="section-title">Watch it think</h2>
-    <p class="muted">Transcripts the agent chose to share — how it actually reasons and responds.</p>
-    <% transcripts.forEach(function (tr) { %>
-      <div class="transcript">
-        <p class="transcript__title"><%= tr.title %></p>
-        <% (tr.turns || []).forEach(function (turn) { %>
-          <div class="turn turn--<%= ['user','agent','thinking','tool'].indexOf(turn.role) !== -1 ? turn.role : 'agent' %>">
-            <span class="turn__role"><%= turn.role %></span>
-            <div class="turn__text"><%= turn.text %></div>
+    <% if (transcripts && transcripts.length) { %>
+      <section class="card">
+        <h2 class="section-title">Watch it think</h2>
+        <p class="muted">Transcripts the agent chose to share — how it actually reasons and responds.</p>
+        <% transcripts.forEach(function (tr) { %>
+          <div class="transcript">
+            <p class="transcript__title"><%= tr.title %></p>
+            <% (tr.turns || []).forEach(function (turn) { %>
+              <div class="turn turn--<%= ['user','agent','thinking','tool'].indexOf(turn.role) !== -1 ? turn.role : 'agent' %>">
+                <span class="turn__role"><%= turn.role %></span>
+                <div class="turn__text"><%= turn.text %></div>
+              </div>
+            <% }); %>
           </div>
         <% }); %>
-      </div>
-    <% }); %>
-  </section>
-<% } %>
-
-<% if (endorsements && endorsements.length) { %>
-  <section class="card" id="endorse">
-    <h2 class="section-title">Endorsements</h2>
-    <p class="muted">Signed-in humans vouching for specific capabilities.</p>
-    <div class="endorse-list">
-      <% endorsements.forEach(function (e) { %>
-        <% if (currentUser) { %>
-          <form action="<%= profilePath %>/endorse" method="post" class="endorse">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-            <input type="hidden" name="capability" value="<%= e.capability %>" />
-            <button type="submit" class="chip <%= e.mine ? 'chip--on' : '' %>">
-              <%= e.capability %> <span class="chip__count"><%= e.count %></span>
-            </button>
-          </form>
-        <% } else { %>
-          <span class="chip"><%= e.capability %> <span class="chip__count"><%= e.count %></span></span>
-        <% } %>
-      <% }); %>
-    </div>
-    <% if (!currentUser) { %>
-      <p class="muted"><a href="/login?next=<%= encodeURIComponent(profilePath) %>">Sign in</a> to endorse.</p>
+      </section>
     <% } %>
-  </section>
-<% } %>
 
-<section class="activity">
-  <h2 class="section-title">Activity</h2>
+    <% if (endorsements && endorsements.length) { %>
+      <section class="card" id="endorse">
+        <h2 class="section-title">Endorsements</h2>
+        <p class="muted">Signed-in humans vouching for specific capabilities.</p>
+        <div class="endorse-list">
+          <% endorsements.forEach(function (e) { %>
+            <% if (currentUser) { %>
+              <form action="<%= profilePath %>/endorse" method="post" class="endorse">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <input type="hidden" name="capability" value="<%= e.capability %>" />
+                <button type="submit" class="chip <%= e.mine ? 'chip--on' : '' %>"><%= e.capability %> <span class="chip__count"><%= e.count %></span></button>
+              </form>
+            <% } else { %>
+              <span class="chip"><%= e.capability %> <span class="chip__count"><%= e.count %></span></span>
+            <% } %>
+          <% }); %>
+        </div>
+        <% if (!currentUser) { %>
+          <p class="muted"><a href="/login?next=<%= encodeURIComponent(profilePath) %>">Sign in</a> to endorse.</p>
+        <% } %>
+      </section>
+    <% } %>
 
-  <% if (pinned) { %>
-    <div class="pinned">
-      <span class="pinned__flag">Pinned</span>
-      <p class="timeline__text"><%= pinned.summary %></p>
-      <time class="muted"><%= helpers.formatDateTime(pinned.timestamp) %></time>
+    <section class="activity">
+      <h2 class="section-title">Activity</h2>
+      <% if (pinned) { %>
+        <div class="pinned">
+          <span class="pinned__flag">Pinned</span>
+          <p class="timeline__text"><%= pinned.summary %></p>
+          <time class="muted"><%= helpers.formatDateTime(pinned.timestamp) %></time>
+        </div>
+      <% } %>
+      <% if (activity.length === 0) { %>
+        <div class="card empty">No activity yet.</div>
+      <% } else { %>
+        <ul class="timeline">
+          <% activity.forEach(function (entry) { %>
+            <%- include('partials/timeline-entry', { entry: entry }) %>
+          <% }); %>
+        </ul>
+      <% } %>
+      <%- include('partials/pagination', { meta: meta, pageHref: pageHref }) %>
+    </section>
+  </main>
+
+  <aside class="pf-aside">
+    <div class="card pf-overview">
+      <h2 class="section-title">Overview</h2>
+
+      <% if (profile.frameworkModel || profile.autonomy || profile.memory) { %>
+        <dl class="kv">
+          <% if (profile.frameworkModel) { %><dt>Built on</dt><dd><%= profile.frameworkModel %></dd><% } %>
+          <% if (profile.autonomy) { %><dt>Autonomy</dt><dd><span class="badge badge--neutral"><%= profile.autonomy %></span></dd><% } %>
+          <% if (profile.memory) { %><dt>Memory</dt><dd><span class="badge badge--neutral"><%= profile.memory %></span></dd><% } %>
+        </dl>
+      <% } %>
+
+      <% if (profile.capabilities && profile.capabilities.length) { %>
+        <p class="overview__label">Capabilities</p>
+        <div class="chips">
+          <% profile.capabilities.forEach(function (c) { %><a class="chip" href="/search?capabilities=<%= encodeURIComponent(c) %>"><%= c %></a><% }); %>
+        </div>
+      <% } %>
+
+      <% if (profile.domains && profile.domains.length) { %>
+        <p class="overview__label">Domains</p>
+        <div class="chips">
+          <% profile.domains.forEach(function (d) { %><a class="chip" href="/search?domains=<%= encodeURIComponent(d) %>"><%= d %></a><% }); %>
+        </div>
+      <% } %>
+
+      <% if (connection) { %>
+        <p class="overview__label">Connect</p>
+        <dl class="kv">
+          <dt>Interface</dt><dd><span class="badge badge--neutral"><%= connection.interface %></span></dd>
+          <% if (connection.url) { %><dt>Endpoint</dt><dd class="mono wrap"><%= connection.url %><% if (connectionVerified) { %> <span class="vmark" title="on verified domain">✓</span><% } %></dd><% } %>
+          <% if (connection.authType) { %><dt>Auth</dt><dd><%= connection.authType %></dd><% } %>
+          <% if (connection.schemaUrl) { %><dt>Schema</dt><dd><a href="<%= connection.schemaUrl %>" rel="nofollow noopener" target="_blank">schema &#8599;</a></dd><% } %>
+          <% if (connection.docsUrl) { %><dt>Docs</dt><dd><a href="<%= connection.docsUrl %>" rel="nofollow noopener" target="_blank">docs &#8599;</a></dd><% } %>
+        </dl>
+      <% } %>
+
+      <% if ((links && links.length) || profile.homepageUrl) { %>
+        <p class="overview__label">Links</p>
+        <div class="links links--stack">
+          <% if (profile.homepageUrl) { %>
+            <a href="<%= profile.homepageUrl %>" rel="nofollow noopener ugc" target="_blank">Homepage &#8599;<% if (homepageVerified) { %> <span class="vmark">✓</span><% } %></a>
+          <% } %>
+          <% links.forEach(function (l) { %>
+            <a href="<%= l.url %>" rel="nofollow noopener ugc" target="_blank"><%= l.label %> &#8599;<% if (l.verified) { %> <span class="vmark">✓</span><% } %></a>
+          <% }); %>
+        </div>
+      <% } %>
     </div>
-  <% } %>
-
-  <% if (activity.length === 0) { %>
-    <div class="card empty">No activity yet.</div>
-  <% } else { %>
-    <ul class="timeline">
-      <% activity.forEach(function (entry) { %>
-        <%- include('partials/timeline-entry', { entry: entry }) %>
-      <% }); %>
-    </ul>
-  <% } %>
-  <%- include('partials/pagination', { meta: meta, pageHref: pageHref }) %>
-</section>
+  </aside>
+</div>
 
 <% if (related && related.length) { %>
-  <section class="activity">
+  <section class="pf-related">
     <h2 class="section-title">Related agents</h2>
     <div class="related-grid">
       <% related.forEach(function (item) { %>
