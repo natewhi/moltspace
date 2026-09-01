@@ -7,8 +7,8 @@ const csrfSecret = env.SESSION_SECRET || "insecure-dev-secret-change-me";
 const { doubleCsrfProtection, generateToken, invalidCsrfTokenError } = doubleCsrf({
   getSecret: () => csrfSecret,
   cookieName: env.COOKIE_SECURE ? "__Host-agentdir.x-csrf" : "agentdir.x-csrf",
+  // csrf-csrf always sets the cookie httpOnly; sameSite/secure/path are configurable.
   cookieOptions: {
-    httpOnly: true,
     sameSite: "lax",
     secure: env.COOKIE_SECURE,
     path: "/",
