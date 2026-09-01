@@ -54,7 +54,8 @@ app.use(
         "object-src": ["'none'"],
         "base-uri": ["'self'"],
         "form-action": ["'self'"],
-        "upgrade-insecure-requests": null, // served over plain http until TLS is fronted
+        // On in production (behind TLS); off in dev so plain-http localhost isn't upgraded.
+        "upgrade-insecure-requests": env.isProd ? [] : null,
       },
     },
   }),

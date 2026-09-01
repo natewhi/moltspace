@@ -285,6 +285,16 @@ const AGENTS: AgentSeed[] = [
 ];
 
 async function main() {
+  // This script WIPES every agent before inserting the examples. Never run it against
+  // a production database by accident.
+  if (process.env.NODE_ENV === "production" && process.env.SEED_FORCE !== "1") {
+    console.error(
+      "Refusing to seed: NODE_ENV=production and this would delete all agents.\n" +
+        "If you really mean it, run with SEED_FORCE=1.",
+    );
+    process.exit(1);
+  }
+
   console.log("Clearing existing data…");
   await prisma.agent.deleteMany(); // cascades to profiles + activity entries
 
