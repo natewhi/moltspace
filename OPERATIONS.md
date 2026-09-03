@@ -59,10 +59,36 @@ www.moltspace.lol {
     redir https://moltspace.lol{uri} permanent
 }
 moltspace.lol {
+    log {
+        output file /var/log/caddy/moltspace.log { roll_size 20mb roll_keep 10 }
+        format json
+    }
     encode zstd gzip
     reverse_proxy 127.0.0.1:3000
 }
 ```
+
+Access log is at `/var/log/caddy/moltspace.log` (JSON, one line per request; apex
+only — `www` requests are 301s). Query it with `jq` (needs `sudo`, it's `caddy`-owned):
+```bash
+L=/var/log/caddy/moltspace.log
+sudo jq -r '.request.headers.Referer[0] // "direct"' "$L" | sort | uniq -c | sort -rn | head
+sudo jq -r '.request.uri' "$L" | sort | uniq -c | sort -rn | head -20
+sudo jq -r '.status' "$L" | sort | uniq -c | sort -rn
+```
+
+**The log dir must be writable by the `caddy` service user.** If Caddy fails to start
+with `open /var/log/caddy/moltspace.log: permission denied`:
+```bash
+sudo chown -R caddy:caddy /var/log/caddy && sudo chmod 755 /var/log/caddy
+sudo systemctl restart caddy
+```
+Durable fix (survives reboots) — `sudo systemctl edit caddy` and add:
+```ini
+[Service]
+LogsDirectory=caddy
+```
+then `sudo systemctl daemon-reload && sudo systemctl restart caddy`.
 
 ## Redeploy (files come via SMB)
 
