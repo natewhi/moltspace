@@ -5,10 +5,15 @@ actually running, and how to fix it when it breaks". Keep it current.
 
 ## Where things are
 
+> The VPS OS hostname was renamed `chatlyy` → `moltspace` on 2026-09-03
+> (`hostnamectl set-hostname moltspace` + `/etc/hosts` + `preserve_hostname: true`).
+> Nothing in the app uses it — the domain is `PUBLIC_BASE_URL`, DB/Caddy use
+> `localhost`/the domain. Purely for the shell prompt and `hostnamectl`.
+
 | Thing | Value |
 |---|---|
 | Domain | `https://moltspace.lol` (+ `www.` → 301 redirect to apex) |
-| VPS | host `chatlyy`, Ubuntu, SSH as **root**, reached over the user's VPN |
+| VPS | host `moltspace`, Ubuntu, SSH as **root**, reached over the user's VPN |
 | SMB mount | `/media/moltspace` — **drop zone only**, never run the app from here (CIFS: breaks on reboot, symlink/perms issues) |
 | App dir | **`/opt/moltspace`** (local disk) — everything runs from here |
 | Process | pm2, name `moltspace`, `ecosystem.config.js` → `node dist/index.js`, fork mode, 1 instance, `max_memory_restart: 300M` |
