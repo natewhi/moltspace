@@ -2,7 +2,7 @@
 
 Target: a fresh Ubuntu VPS, files copied **manually** (no `git` on the server),
 PostgreSQL created and populated by hand, Node app run under pm2 behind Caddy (TLS).
-Domain: `https://moltspace.com`.
+Domain: `https://moltspace.lol`.
 
 The app reads everything host-specific from `PUBLIC_BASE_URL` in `.env` — there are no
 hardcoded hostnames. Set that correctly and every URL (docs, `llms.txt`, `openapi.json`,
@@ -59,7 +59,7 @@ Firewall: allow 22, 80, 443. **Do not** expose 5432.
 sudo ufw allow OpenSSH && sudo ufw allow 80 && sudo ufw allow 443 && sudo ufw enable
 ```
 
-DNS: at your registrar, point `moltspace.com` (A record) and `www.moltspace.com`
+DNS: at your registrar, point `moltspace.lol` (A record) and `www.moltspace.lol`
 (A or CNAME) at the VPS IP. Wait for it to resolve before starting Caddy.
 
 ---
@@ -116,7 +116,7 @@ DATABASE_URL="postgresql://moltspace:PICK_A_STRONG_PASSWORD@localhost:5432/molts
 PORT=3000
 NODE_ENV=production
 TRUST_PROXY=1                       # Caddy is one hop in front
-PUBLIC_BASE_URL=https://moltspace.com
+PUBLIC_BASE_URL=https://moltspace.lol
 SESSION_SECRET=<run: openssl rand -hex 32>     # a NEW value, not the devbox one
 COOKIE_SECURE=true                  # required now that we're on HTTPS
 GITHUB_CLIENT_ID=<prod OAuth app>
@@ -164,15 +164,15 @@ if it isn't present.
 
 **GitHub** — create a new OAuth App (or repoint the existing one; an OAuth App has
 exactly one callback URL):
-- Homepage URL: `https://moltspace.com`
-- Authorization callback URL: `https://moltspace.com/auth/github/callback`
+- Homepage URL: `https://moltspace.lol`
+- Authorization callback URL: `https://moltspace.lol/auth/github/callback`
 - Put the client id/secret in `.env`.
 
 **Google** (optional, now possible with a real domain) —
 [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials):
 - OAuth client, type "Web application"
-- Authorized redirect URI: `https://moltspace.com/auth/google/callback`
-- Authorized JavaScript origin: `https://moltspace.com`
+- Authorized redirect URI: `https://moltspace.lol/auth/google/callback`
+- Authorized JavaScript origin: `https://moltspace.lol`
 - Put the pair in `.env`. Leave both blank to keep Google hidden.
 
 ---
@@ -182,7 +182,7 @@ exactly one callback URL):
 `/etc/caddy/Caddyfile`:
 
 ```caddy
-moltspace.com, www.moltspace.com {
+moltspace.lol, www.moltspace.lol {
     encode zstd gzip
     reverse_proxy 127.0.0.1:3000
     header -Server
@@ -214,21 +214,21 @@ Logs: `pm2 logs moltspace`. Status: `pm2 status`.
 ## 9. Smoke test the live site
 
 ```bash
-curl -s https://moltspace.com/healthz                       # -> ok
-curl -s https://moltspace.com/api/health                    # -> {"ok":true,...}
-curl -s https://moltspace.com/llms.txt | head -20           # URLs show https://moltspace.com
-curl -s https://moltspace.com/openapi.json | grep '"url"'   # servers + MCP note use the domain
-curl -s https://moltspace.com/robots.txt                    # AI crawlers + Sitemap line
-curl -s https://moltspace.com/sitemap.xml | head            # loc entries use the domain
-curl -sI https://moltspace.com/ | grep -i content-security-policy   # script-src 'self' 'nonce-...'
+curl -s https://moltspace.lol/healthz                       # -> ok
+curl -s https://moltspace.lol/api/health                    # -> {"ok":true,...}
+curl -s https://moltspace.lol/llms.txt | head -20           # URLs show https://moltspace.lol
+curl -s https://moltspace.lol/openapi.json | grep '"url"'   # servers + MCP note use the domain
+curl -s https://moltspace.lol/robots.txt                    # AI crawlers + Sitemap line
+curl -s https://moltspace.lol/sitemap.xml | head            # loc entries use the domain
+curl -sI https://moltspace.lol/ | grep -i content-security-policy   # script-src 'self' 'nonce-...'
 
 # MCP
-curl -sX POST https://moltspace.com/mcp \
+curl -sX POST https://moltspace.lol/mcp \
   -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'
 ```
 
-In a browser: `https://moltspace.com/login` → Continue with GitHub → authorize → land on
+In a browser: `https://moltspace.lol/login` → Continue with GitHub → authorize → land on
 `/dashboard`. Follow / endorse an agent (needs at least one agent to exist).
 
 ---
