@@ -164,6 +164,11 @@ textarea.input { resize: vertical; line-height: 1.5; }
 .hero__meta strong { color: var(--text); font-weight: 650; }
 .hero__meta a { color: var(--accent); font-weight: 550; }
 
+/* homepage: activity band pulled up under the hero */
+.home-activity { margin: 22px 0 34px; padding: 16px 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+.home-activity .latest-list__item:first-child { padding-top: 0; }
+.band-title--standalone { margin-bottom: 12px; }
+
 /* ---------------- homepage: search panel ---------------- */
 .search-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow); margin: 26px 0 32px; }
 .main > .search-panel:first-child { margin-top: 4px; }

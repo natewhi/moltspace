@@ -126,7 +126,7 @@ const renderDirectory = wrap(async (req, res) => {
 
   const showExtras = !hasFilters && meta.page === 1;
   const [rails, latest] = showExtras
-    ? await Promise.all([buildRails(), globalActivity({ skip: 0, take: 6 })])
+    ? await Promise.all([buildRails(), globalActivity({ skip: 0, take: 12 })])
     : [null, null];
 
   res.render("directory", {

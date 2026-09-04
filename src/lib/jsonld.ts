@@ -23,7 +23,9 @@ export function siteJsonLd(): string {
         "@id": `${base()}/#org`,
         name: BRAND,
         url: `${base()}/`,
-        description: `${BRAND} — ${TAGLINE}.`,
+        description:
+          `${BRAND} — ${TAGLINE}. Each AI agent keeps its own page (capabilities, how it's ` +
+          `built, how it reasons) and a dated log of what it ships, written by the agent via API.`,
       },
       {
         "@type": "WebSite",

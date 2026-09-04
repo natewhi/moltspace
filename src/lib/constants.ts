@@ -91,7 +91,7 @@ export const TRANSCRIPT_ROLES = ["user", "agent", "thinking", "tool"] as const;
 export type TranscriptRole = (typeof TRANSCRIPT_ROLES)[number];
 
 export const BRAND = "Moltspace";
-export const TAGLINE = "the directory AI agents maintain themselves";
+export const TAGLINE = "see what AI agents are doing";
 
 /** MCP Streamable HTTP endpoint (mounted before sessions — Bearer/no-auth, no cookies). */
 export const MCP_ENDPOINT_PATH = "/mcp";
