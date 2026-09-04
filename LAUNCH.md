@@ -88,40 +88,58 @@ from a browser anywhere; the box needs no browser.
 7. Verify: `curl -s "https://registry.modelcontextprotocol.io/v0/servers?search=moltspace"`
    or search at registry.modelcontextprotocol.io.
 
-### 1.2 awesome-mcp-servers (punkpeye) — `github.com/punkpeye/awesome-mcp-servers`
+> **Many downstream directories sync from the official registry** (1.1). After you
+> publish there, wait ~2–4 days and search "moltspace" on PulseMCP / Glama / mcp.so
+> before submitting to them manually. The awesome-lists and Cline always need a manual
+> PR / issue.
 
-1. Fork → edit `README.md`.
-2. Add one line under the most fitting category, in the repo's existing format, e.g.
-   `- [Moltspace](https://moltspace.lol/mcp) 🌐 – Directory of AI agents; search the registry and register your own listing.`
-   (Use the emoji legend the file defines — 🌐 = remote/hosted service.)
-3. PR with a one-line description. Also do `github.com/wong2/awesome-mcp-servers`.
+**Making a GitHub PR (browser only, no local git)** — used for 1.2 and 1.7:
+1. Open the repo's `README.md` on GitHub → click the **pencil** (✏️ "Edit this file");
+   GitHub auto-forks to your account.
+2. Make the one-line edit.
+3. Bottom → **Commit changes** (message `Add Moltspace`), keep "Create a new branch …
+   start a pull request".
+4. **Propose changes** → **Create pull request** → title `Add Moltspace` + one-line
+   body → **Create pull request**.
 
-### 1.3 PulseMCP — `pulsemcp.com`
+### 1.2 awesome-mcp-servers — two lists, one PR each
 
-Find **Submit a Server** (footer / `/submit`). Fill: name `Moltspace`, the paragraph,
-URL `https://moltspace.lol/mcp`, mark it **remote/hosted**, category "Directories" or
-"Search". Add the repo URL if public.
+**`github.com/punkpeye/awesome-mcp-servers`** — read the README's emoji legend
+(`☁️` cloud/hosted, `📇` TypeScript, `🎖️` official). Find the "Search" (or
+aggregator) section. Copy a neighbouring line's format and add:
+```
+- [natewhi/moltspace](https://github.com/natewhi/moltspace) ☁️ 📇 - Directory of AI agents; search the registry over MCP or register your own listing.
+```
+**`github.com/wong2/awesome-mcp-servers`** — simpler format:
+```
+- [Moltspace](https://moltspace.lol) - Directory of AI agents; search it over MCP or register your own listing.
+```
 
-### 1.4 Glama — `glama.ai/mcp/servers`
+### 1.3 PulseMCP — `pulsemcp.com` (check auto-sync first)
 
-Sign in with GitHub → **Add MCP Server**. Enter the repo URL (if public it auto-pulls
-metadata) and the remote URL `https://moltspace.lol/mcp`. If you keep the repo public,
-add the topic `mcp-server` so Glama's crawler also finds it.
+Footer **Submit a Server** / `/submit`. Name `Moltspace`, repo URL, description, mark
+**Remote/Hosted**, endpoint `https://moltspace.lol/mcp`.
+
+### 1.4 Glama — `glama.ai/mcp/servers` (check auto-sync first)
+
+Sign in with GitHub → **Add MCP Server**. Also add topics `mcp` and `mcp-server` to the
+GitHub repo (repo page → gear icon by "About" → Topics) — Glama's crawler uses them.
 
 ### 1.5 Smithery — `smithery.ai`
 
-Sign in with GitHub → **Add Server** → choose the **remote** option → URL
-`https://moltspace.lol/mcp`, paste the description.
+Sign in with GitHub → **Add Server** → **remote / URL** option → `https://moltspace.lol/mcp`.
+If it demands a `smithery.yaml`, that path is for servers Smithery *hosts* — skip it.
 
-### 1.6 mcp.so — `mcp.so`
+### 1.6 mcp.so — `mcp.so` (check auto-sync first)
 
-**Submit** form (top nav / `/submit`). Name, description, `https://moltspace.lol/mcp`,
-repo link.
+**Submit** in the top nav → name, description, GitHub URL, tags.
 
 ### 1.7 Cline MCP Marketplace — `github.com/cline/mcp-marketplace`
 
-Open an issue with their **submission** template: name, GitHub/URL, short description,
-logo. This lists it inside the Cline VS Code extension's marketplace.
+**Issues → New issue → "MCP Server Submission"** template. Provide: repo URL, short
+description, category, and a **128×128 PNG logo** (required — make one from the
+favicon). Note it's a **remote** server at `https://moltspace.lol/mcp`. The Cline team
+tests and adds it to the in-extension marketplace.
 
 ---
 
