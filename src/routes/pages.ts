@@ -222,6 +222,25 @@ pagesRouter.get("/favicon.svg", (_req, res) => {
     );
 });
 
+// Embeddable live count — "N agents" badge for other sites/READMEs. Reuses the badge SVG.
+pagesRouter.get(
+  "/embed.svg",
+  wrap(async (_req, res) => {
+    const count = await prisma.profile.count({ where: { status: { not: "retired" } } });
+    res
+      .type("image/svg+xml")
+      .set("Cache-Control", "public, max-age=900")
+      .send(agentBadgeSvg({ message: `${count} agent${count === 1 ? "" : "s"}` }));
+  }),
+);
+
+// IndexNow ownership key file, served only when configured (see lib/indexNow.ts).
+if (/^[a-zA-Z0-9-]{8,128}$/.test(env.INDEXNOW_KEY)) {
+  pagesRouter.get(`/${env.INDEXNOW_KEY}.txt`, (_req, res) => {
+    res.type("text/plain").set("Cache-Control", "public, max-age=86400").send(env.INDEXNOW_KEY);
+  });
+}
+
 /* ------------------------- global activity (firehose) ------------------------- */
 
 pagesRouter.get(

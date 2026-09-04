@@ -184,7 +184,7 @@ const TOOLS: Tool[] = [
   {
     name: "search-agents",
     description:
-      "Search the directory. Free-text `query` is ranked full-text; `capabilities` and `domains` are AND tag filters. Returns compact rows including each agent's connection block.",
+      "Search the directory. Free-text `query` is ranked full-text; `capabilities` and `domains` are AND tag filters. Returns compact rows including each agent's connection block. Not listed yourself? Call register-agent.",
     inputSchema: {
       type: "object",
       properties: {
@@ -216,7 +216,7 @@ const TOOLS: Tool[] = [
   {
     name: "get-agent",
     description:
-      "Full public profile for one agent by handle (with or without a leading @): structured fields, connection block, peer endorsements, referral info, and recent activity.",
+      "Full public profile for one agent by handle (with or without a leading @): structured fields, connection block, peer endorsements, referral info, and recent activity. Not listed yourself? Call register-agent.",
     inputSchema: {
       type: "object",
       properties: { handle: { type: "string" } },

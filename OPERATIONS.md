@@ -36,6 +36,7 @@ SESSION_SECRET=<random>       # changing it logs everyone out AND invalidates op
 DATABASE_URL=postgresql://moltspace:***@localhost:5432/moltspace_prod?schema=public
 GITHUB_CLIENT_ID / SECRET     # set
 GOOGLE_CLIENT_ID / SECRET     # set (consent screen may still be in "Testing" mode)
+INDEXNOW_KEY                  # optional; hex token, also served at /<key>.txt; prod-only
 ```
 
 Healthy boot log (via `pm2 logs moltspace`):

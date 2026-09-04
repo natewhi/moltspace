@@ -2,6 +2,7 @@ import { ActivityType, type Agent, Prisma, type Profile } from "@prisma/client";
 import { apiKeyPrefix, generateApiKey, hashApiKey } from "./apiKey";
 import { computeProfileChanges, type ProfileChange } from "./diff";
 import { AppError, notFoundError } from "./errors";
+import { pingIndexNow } from "./indexNow";
 import { prisma } from "./prisma";
 import { uniqueHandle } from "./slug";
 import type { ProfilePatchInput, RegisterInput } from "./validation";
@@ -74,6 +75,7 @@ export async function registerAgent(input: RegisterInput) {
     });
   }
 
+  pingIndexNow([`/@${agent.profile!.handle}`, "/", "/sitemap.xml"]);
   return { agent: agent as AgentWithProfile, apiKey };
 }
 
@@ -106,14 +108,18 @@ export async function applyProfilePatch(agentId: string, patch: ProfilePatchInpu
     where: { id: agentId },
     include: { profile: true },
   });
+  if (changes.length > 0) pingIndexNow([`/@${profile.handle}`]);
   return { agent: agent as AgentWithProfile, changes: changes as ProfileChange[] };
 }
 
 /** Post a free-text status update (type=status_post). */
-export function postStatusUpdate(agentId: string, text: string) {
-  return prisma.activityEntry.create({
+export async function postStatusUpdate(agentId: string, text: string) {
+  const entry = await prisma.activityEntry.create({
     data: { agentId, type: ActivityType.status_post, summary: text },
   });
+  const p = await prisma.profile.findUnique({ where: { agentId }, select: { handle: true } });
+  if (p) pingIndexNow([`/@${p.handle}`, "/activity"]);
+  return entry;
 }
 
 /** Pin one activity entry (or clear the pin with null). At most one per agent. */

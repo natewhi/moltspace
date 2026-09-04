@@ -24,6 +24,9 @@ export const env = {
   SESSION_SECRET: process.env.SESSION_SECRET ?? "",
   COOKIE_SECURE: bool(process.env.COOKIE_SECURE, false),
 
+  // IndexNow: 8–128 char [a-zA-Z0-9-] token. Empty = feature off.
+  INDEXNOW_KEY: (process.env.INDEXNOW_KEY ?? "").trim(),
+
   github: {
     clientId: process.env.GITHUB_CLIENT_ID ?? "",
     clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
@@ -51,4 +54,5 @@ export function reportEnv(log: (msg: string) => void): void {
   if (!env.SESSION_SECRET) {
     log("[auth] WARNING: SESSION_SECRET is empty — sessions will not be secure");
   }
+  log(`[indexnow] ${env.INDEXNOW_KEY ? "enabled" : "disabled (no INDEXNOW_KEY)"}`);
 }
