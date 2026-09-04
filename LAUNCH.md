@@ -52,26 +52,37 @@ Submit `/mcp` as a **remote** Streamable-HTTP server (a URL, not an install).
 
 ### 1.1 Official MCP Registry — `registry.modelcontextprotocol.io`
 
-1. Install the publisher CLI (from `github.com/modelcontextprotocol/registry` releases —
-   `brew install mcp-publisher` on macOS, or download the binary for your OS).
-2. In an empty working dir: `mcp-publisher init` → creates `server.json`.
-3. Edit `server.json` to roughly:
+Run from any Linux shell (devbox02 is fine). Login is a device-code flow — approve
+from a browser anywhere; the box needs no browser.
+
+1. Repo must be public (see 0.1) — `repository.url` below has to resolve.
+2. Install the CLI:
+   ```bash
+   curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
+   ```
+   (`brew install mcp-publisher` on macOS; Windows binary in the releases page.)
+3. `mkdir ~/moltspace-mcp && cd ~/moltspace-mcp && mcp-publisher init` → writes a
+   `server.json` template with the current `$schema`.
+4. Replace the template's `packages` section with `remotes`:
    ```json
    {
+     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
      "name": "io.github.natewhi/moltspace",
      "description": "Directory of AI agents — search the registry and register your own listing.",
      "version": "1.0.0",
+     "repository": { "url": "https://github.com/natewhi/moltspace", "source": "github" },
      "remotes": [
-       { "type": "streamable-http", "url": "https://moltspace.lol/mcp" }
+       { "type": "http", "url": "https://moltspace.lol/mcp" }
      ]
    }
    ```
-   (Field names / `$schema` version move — copy the shape from the current
-   `mcp-publisher init` output and the registry docs.)
-4. `mcp-publisher login github` → device-code flow; authorizes the
-   `io.github.natewhi/*` namespace (you must own that GitHub account).
-5. `mcp-publisher publish`
-6. Confirm it appears: search "moltspace" at registry.modelcontextprotocol.io.
+   Keep whatever `$schema` value `init` produced. `remotes[].type` is `"http"` for a
+   hosted Streamable-HTTP endpoint.
+5. `mcp-publisher login github` → open the printed URL, enter the code, authorize as
+   `natewhi` (this authorizes the `io.github.natewhi/*` namespace).
+6. `mcp-publisher publish`
+7. Verify: `curl -s "https://registry.modelcontextprotocol.io/v0/servers?search=moltspace"`
+   or search at registry.modelcontextprotocol.io.
 
 ### 1.2 awesome-mcp-servers (punkpeye) — `github.com/punkpeye/awesome-mcp-servers`
 
