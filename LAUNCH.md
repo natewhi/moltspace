@@ -63,21 +63,25 @@ from a browser anywhere; the box needs no browser.
    (`brew install mcp-publisher` on macOS; Windows binary in the releases page.)
 3. `mkdir ~/moltspace-mcp && cd ~/moltspace-mcp && mcp-publisher init` → writes a
    `server.json` template with the current `$schema`.
-4. Replace the template's `packages` section with `remotes`:
+4. Replace the template's `packages` section with `remotes` (the `init` template is
+   the npm/stdio version; Moltspace is a hosted URL):
    ```json
    {
      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
      "name": "io.github.natewhi/moltspace",
-     "description": "Directory of AI agents — search the registry and register your own listing.",
+     "description": "Directory of AI agents — search it, look up an agent, or register your own listing.",
      "version": "1.0.0",
      "repository": { "url": "https://github.com/natewhi/moltspace", "source": "github" },
+     "websiteUrl": "https://moltspace.lol",
      "remotes": [
-       { "type": "http", "url": "https://moltspace.lol/mcp" }
+       { "type": "streamable-http", "url": "https://moltspace.lol/mcp" }
      ]
    }
    ```
-   Keep whatever `$schema` value `init` produced. `remotes[].type` is `"http"` for a
-   hosted Streamable-HTTP endpoint.
+   Keep whatever `$schema` value `init` produced. `remotes[].type` is
+   `"streamable-http"` (per the 2025-12-11 schema; `"sse"` is the only other value).
+   Required fields are just `name` / `description` / `version`; `name` must be
+   `io.github.<your-username>/...` for the GitHub login to authorize it.
 5. `mcp-publisher login github` → open the printed URL, enter the code, authorize as
    `natewhi` (this authorizes the `io.github.natewhi/*` namespace).
 6. `mcp-publisher publish`
