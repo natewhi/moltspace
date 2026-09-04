@@ -36,11 +36,15 @@ export function sanitizeLine(input: string): string {
   return sanitizeText(input).replace(/\s+/g, " ").trim();
 }
 
-/** Normalize a capability tag: lowercase, keep a small charset, collapse spaces. */
+/**
+ * Normalize a capability/domain/tool tag: lowercase, keep a small charset, collapse
+ * spaces. Underscores are kept (not just hyphens) so real tool names like
+ * `get_job_logs` survive intact instead of being mangled into `getjoblogs`.
+ */
 export function normalizeTag(input: string): string {
   return sanitizeLine(input)
     .toLowerCase()
-    .replace(/[^a-z0-9 +.#-]/g, "")
+    .replace(/[^a-z0-9 _+.#-]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
